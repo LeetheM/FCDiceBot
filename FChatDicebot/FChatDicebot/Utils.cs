@@ -1,4 +1,5 @@
-﻿using FChatDicebot.Model;
+﻿using FChatDicebot.DiceFunctions;
+using FChatDicebot.Model;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,7 @@ namespace FChatDicebot
 {
     public class Utils
     {
+
         public static WebRequest CreateWebRequest(string url, System.Object saveReq, string method = "POST")// System.Object saveReq, string method)
         {
             WebRequest request = WebRequest.Create(url);
@@ -154,6 +156,25 @@ namespace FChatDicebot
             return returnInt;
         }
 
+        public static List<int> GetAllNumbersFromInputs(string[] inputs)
+        {
+            List<int> rtnList = new List<int>();
+            int returnInt = -1;
+            if (inputs == null || inputs.Length == 0)
+                return rtnList;
+
+            foreach (string s in inputs)
+            {
+                int.TryParse(s, out returnInt);
+                if (returnInt > 0)
+                {
+                    rtnList.Add(returnInt);
+                }
+            }
+
+            return rtnList;
+        }
+
         public static string CombineStringArray(string[] input)
         {
             if (input == null)
@@ -191,6 +212,74 @@ namespace FChatDicebot
             }
 
             return returnString;
+        }
+
+        public static string GetDeckTypeString(DeckType deckType)
+        {
+            switch(deckType)
+            {
+                case DeckType.Playing:
+                    return "Playing";
+                case DeckType.Tarot:
+                    return "Tarot";
+                case DeckType.ManyThings:
+                    return "Many Things";
+            }
+            return "undefined";
+        }
+
+        public static string GetDeckTypeStringHidePlaying(DeckType deckType)
+        {
+            string deckTypeString = "";
+            if (deckType != DeckType.Playing)
+            {
+                deckTypeString = "(" + Utils.GetDeckTypeString(deckType) + ") ";
+            }
+            return deckTypeString;
+        }
+
+        public static string GetTimeSpanPrint(TimeSpan t)
+        {
+            string form = string.Format("{0} days, {1} hours, {2} minutes, {3} seconds", t.Days, t.Hours, t.Minutes, t.Seconds);
+            return form;
+        }
+
+        public static void WriteToFileAsData(object saveData, string fileName)//List<Conversation> conversations
+        {
+            string g = JsonConvert.SerializeObject(saveData);
+            string filePath = fileName;
+
+            //if(!File.Exists(filePath))
+            //{
+
+            //}
+
+            try
+            {
+                byte[] bytes = System.Text.Encoding.ASCII.GetBytes(g);
+                File.WriteAllBytes(filePath, bytes);
+
+                //todo: add obfuscation to bytes
+            }
+            catch (System.Exception)
+            {
+                Console.WriteLine("exception on writeAsData " + filePath);
+            }
+        }
+
+        public static string GetTotalFileName(string folderName, string fileName)
+        {
+            return folderName + "\\" + fileName;
+        }
+
+        public static bool IsCharacterAdmin(List<string> adminCharacters, string character)
+        {
+            return adminCharacters.Contains(character);
+        }
+
+        public static bool BotMessageIsChatMessage(BotMessage message)
+        {
+            return message.messageType == BotMessageFactory.MSG || message.messageType == BotMessageFactory.PRI;
         }
     }
 }

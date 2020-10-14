@@ -7,37 +7,32 @@ using FChatDicebot.Model;
 using System.Net;
 using Newtonsoft.Json;
 using System.Threading;
+using FChatDicebot.SavedData;
 
 namespace FChatDicebot
 {
     public class BotWebRequests
     {
-        public const string AccountName = "AccountName";
-        public const string AccountPassword = "AccountPassword";
-        public const string CharacterName = "Dice Bot";
-        public const string CName = "Dice Bot";
-        public const string CVersion = "1.01";
-
         private string GetApiTicketUrl = "https://f-list.net/json/getApiTicket.php";
 
         private bool awaitingReturn = false;
 
         public GetApiTicketResponse ApiTicketResult = null;
 
-        public void LoginToServerPublic()
+        public void LoginToServerPublic(AccountSettings accountSettings)
         {
-            Thread t = new Thread(() => LoginToServer(false, false));
+            Thread t = new Thread(() => LoginToServer(accountSettings, false, false));
             t.IsBackground = true;
             t.Start();
         }
 
-        private void LoginToServer(bool friendsList, bool bookmarksList)
+        private void LoginToServer(AccountSettings accountSettings, bool friendsList, bool bookmarksList)
         {
 
             GetApiTicketRequest requestObject = new GetApiTicketRequest()
             {
-                password = AccountPassword,
-                account = AccountName,
+                password = accountSettings.AccountPassword,
+                account = accountSettings.AccountName,
                 no_bookmarks = bookmarksList? "false" : "true",
                 no_characters = "true",
                 no_friends = friendsList ? "false" : "true"
@@ -85,7 +80,7 @@ namespace FChatDicebot
             {
                 Console.WriteLine("WebException on LoginToServer Call: " + ex.Message);
                 Console.WriteLine("Retrying...");
-                LoginToServer(friendsList, bookmarksList);
+                LoginToServer(accountSettings, friendsList, bookmarksList);
             }
         }
     }

@@ -8,6 +8,8 @@ using WebSocketSharp;
 using FChatDicebot.Model;
 using Newtonsoft.Json;
 using FChatDicebot.DiceFunctions;
+using FChatDicebot.SavedData;
+using System.IO;
 
 namespace FChatDicebot
 {
@@ -17,19 +19,32 @@ namespace FChatDicebot
         public string CurrentApiKey = "";
         public const string FListChatUri = "wss://chat.f-list.net/chat2";
         public const bool _debug = false;
+        public const string Version = "1.03";
+
+        public const string FileFolder = "C:\\BotData\\DiceBot";
+        public const string AccountSettingsFileName = "account_settings.txt";
+        public const string StartingChannelsFileName = "starting_channels.txt";
+        public const string ChannelSettingsFileName = "channel_settings.txt";
 
         public BotWebRequests WebRequests;
         public BotMessageQueue MessageQueue;
         public DiceBot DiceBot;
+        public AccountSettings AccountSettings;
+        private List<StartingChannel> StartingChannels;
+
         public TimeSpan Uptime;
         public TimeSpan LastCheckin;
+        public DateTime LoginTime;
         public int TickTimeMiliseconds = 200;
         public int MinimumTimeBetweenMessages = 1200; //minimum 1 second between messages for FList bot rules
         public TimeSpan CheckinInterval = new TimeSpan(0, 0, 20, 0, 0);
-
+        List<string> ChannelsJoined = new List<string>();
 
         public void Run()
         {
+            LoadAccountSettings();
+            LoadStartingChannels();
+
             MessageQueue = new BotMessageQueue();
             WebRequests = new BotWebRequests();
             DiceBot = new DiceFunctions.DiceBot();
@@ -39,14 +54,78 @@ namespace FChatDicebot
             th.Start();
         }
 
+        private void LoadAccountSettings()
+        {
+            string path = Utils.GetTotalFileName( FileFolder , AccountSettingsFileName);
+            try
+            {
+                if (!Directory.Exists(FileFolder))
+                {
+                    Directory.CreateDirectory(FileFolder);
+                }
+
+                if (File.Exists(path))
+                {
+                    string fileText = File.ReadAllText(path, Encoding.ASCII);
+
+                    if(_debug)
+                        Console.WriteLine("read " + path);
+
+                    AccountSettings = JsonConvert.DeserializeObject<AccountSettings>(fileText);
+
+                    if (_debug)
+                        Console.WriteLine("loaded AccountSettings successfully.");
+                }
+                else
+                {
+                    Console.WriteLine("AccountSettings file does not exist.");
+                }
+            }
+            catch (System.Exception exc)
+            {
+                Console.WriteLine("Exception: Failed to load AccountSettings for " + path + "\n" + exc.ToString());
+            }
+        }
+
+        private void LoadStartingChannels()
+        {
+            string path = FileFolder + "\\" + StartingChannelsFileName;
+            try
+            {
+                if (!Directory.Exists(FileFolder))
+                {
+                    Directory.CreateDirectory(FileFolder);
+                }
+
+                if (File.Exists(path))
+                {
+                    string fileText = File.ReadAllText(path, Encoding.ASCII);
+
+                    if (_debug)
+                        Console.WriteLine("read " + path);
+
+                    StartingChannels = JsonConvert.DeserializeObject<List<StartingChannel>>(fileText);
+
+                    if (_debug)
+                        Console.WriteLine("loaded AccountSettings successfully.");
+                }
+                else
+                {
+                    Console.WriteLine("AccountSettings file does not exist.");
+                }
+            }
+            catch (System.Exception exc)
+            {
+                Console.WriteLine("Exception: Failed to load AccountSettings for " + path + "\n" + exc.ToString());
+            }
+        }
+
         public void RunLoop()
         {
             if(_debug)
                 Console.WriteLine("Runloop started");
 
             GetNewApiTicket();
-
-            string testChannel = "adh-fb744504ecce0909b18b";
 
             Uptime = new TimeSpan();
             LastCheckin = new TimeSpan();
@@ -75,16 +154,23 @@ namespace FChatDicebot
 
                 ws.Connect();
 
+                LoginTime = DateTime.UtcNow;
+
                 //required to wait for the server to stop sending startup messages, otherwise overflow occurs and ws closes
                 Thread.Sleep(5000);
 
-                //TODO: load list of startup channels to join
-                JoinChannel(testChannel);
-
+                foreach(StartingChannel channel in StartingChannels)
+                {
+                    JoinChannel(channel.Code);
+                }
+                
                 Thread.Sleep(1000);
 
-                SendMessageInChannel("Dicebot Online", testChannel);
-                SetStatus(STAStatus.Online, "[color=yellow]Dice Bot v" + BotWebRequests.CVersion + " Online![/color] Check out the [user]Dice Bot[/user] profile for a list of commands. You can add Dicebot to your channel with !joinchannel [[i]channel invite code paste[/i]]");
+                StartingChannel testChannel = StartingChannels.FirstOrDefault(a => a.Essential == true);
+                if(testChannel != null)
+                    SendMessageInChannel("Dicebot Online", testChannel.Code);
+
+                SetStatus(STAStatus.Online, "[color=yellow]Dice Bot v" + Version + " Online![/color] Check out the [user]Dice Bot[/user] profile for a list of commands. You can add Dicebot to your channel with !joinchannel [[i]channel invite code paste[/i]]");
 
                 while(true)
                 {
@@ -94,9 +180,10 @@ namespace FChatDicebot
                     {
                         BotMessage nextMessagePeek = MessageQueue.Peek();
 
-                        if (nextMessagePeek.messageType != BotMessageFactory.MSG || LastMessageSent >= MinimumTimeBetweenMessages)
+                        if (!Utils.BotMessageIsChatMessage(nextMessagePeek) || LastMessageSent >= MinimumTimeBetweenMessages)
                         {
                             BotMessage nextMessageToSend = MessageQueue.GetNextMessage();
+
                             if (nextMessageToSend != null)
                             {
                                 Console.WriteLine("sending: " + nextMessageToSend.PrintedCommand());
@@ -121,7 +208,7 @@ namespace FChatDicebot
         private void GetNewApiTicket()
         {
             CurrentApiKey = null;
-            WebRequests.LoginToServerPublic();
+            WebRequests.LoginToServerPublic(AccountSettings);
 
             int timeout = 100000;
             while (WebRequests.ApiTicketResult == null)
@@ -143,11 +230,11 @@ namespace FChatDicebot
         {
             var idn = new IDNclient()
             {
-                account = BotWebRequests.AccountName,
+                account = AccountSettings.AccountName,
                 ticket = CurrentApiKey,
-                character = BotWebRequests.CharacterName,
-                cname = BotWebRequests.CName,
-                cversion = BotWebRequests.CVersion,
+                character = AccountSettings.CharacterName,
+                cname = AccountSettings.CName,
+                cversion = Version,
                 method = "ticket"
             };
             return new BotMessage() { MessageDataFormat = idn, messageType = "IDN" };
@@ -184,6 +271,16 @@ namespace FChatDicebot
                 case "ICH": //initial channel users
                 case "LIS": //all online characters, gender, status
                     break;
+                case "COL": //sent in response to join channel
+                    COLserver colinfo = JsonConvert.DeserializeObject<COLserver>(trimmedChatCommand);
+                    ChannelsJoined.Add(colinfo.channel);
+                    break;
+                case "JCH": //someone joined a channel the bot is in
+                    JCHserver jchInfo = JsonConvert.DeserializeObject<JCHserver>(trimmedChatCommand);
+                    //TODO: greeting option for new channel users
+                    break;
+                case "LCH"://someone left a channel the bot is in
+                    break;
                 case "PIN": //ping from server. reply with ping
                     MessageQueue.AddMessage(new BotMessage() { MessageDataFormat = null, messageType = "PIN" });
                     break;
@@ -199,6 +296,9 @@ namespace FChatDicebot
                     Console.WriteLine("Recieved: " + (data.Length > 100? data.Substring(0, 100) : data));
                     break;
             }
+
+            //if(_debug) //shows all messages recieved from server. very spammy.
+            //    Console.WriteLine("Recieved: " + (data.Length > 100 ? data.Substring(0, 100) : data));
         }
 
         public void InterpretChatCommand(MSGserver messageContent)
@@ -241,6 +341,11 @@ namespace FChatDicebot
             MessageQueue.AddMessage(BotMessageFactory.NewMessage(BotMessageFactory.JCH, new JCHclient() { channel = channel }));
         }
 
+        public void LeaveChannel(string channel)
+        {
+            MessageQueue.AddMessage(BotMessageFactory.NewMessage(BotMessageFactory.LCH, new LCHclient() { channel = channel }));
+        }
+
         public void SetStatus(string status, string message)
         {
             MessageQueue.AddMessage(BotMessageFactory.NewMessage(BotMessageFactory.STA, new STAclient() { status = status, statusmsg = message }));
@@ -275,6 +380,7 @@ namespace FChatDicebot
                             bool jokers = false;
                             bool deckDraw = true;
                             bool secretDraw = false;
+                            string characterDrawName = GetCharacterDrawNameFromCommandTerms(characterName, terms);
                             if (terms != null && terms.Length >= 1 && terms.Contains("j"))
                                 jokers = true;
                             if (terms != null && terms.Length >= 1 && terms.Contains("nodeck"))
@@ -287,10 +393,90 @@ namespace FChatDicebot
                             if (numberDrawn > 1)
                                 cardsS = "s";
 
-                            string messageOutput = "[i]Card" + cardsS + " drawn:[/i] " + DiceBot.DrawCards(numberDrawn, jokers, deckDraw, channel, characterName);
-                            if (secretDraw)
+                            DeckType deckType = GetDeckTypeFromCommandTerms(terms);
+
+                            string deckTypeString = Utils.GetDeckTypeStringHidePlaying(deckType);
+                            string cardDrawingCharacterString = "[user]" + characterDrawName + "[/user]";
+                            if (characterDrawName == DiceBot.DealerName)
+                                cardDrawingCharacterString = "The dealer";
+                            if (characterDrawName == DiceBot.BurnCardsName)
+                                cardDrawingCharacterString = "Burned";
+                            string messageOutput = "[i]" + cardDrawingCharacterString + ": " + deckTypeString + "Card" + cardsS + " drawn:[/i] " + DiceBot.DrawCards(numberDrawn, jokers, deckDraw, channel, deckType, characterDrawName);
+                            if (secretDraw && !(characterDrawName == DiceBot.DealerName || characterDrawName == DiceBot.BurnCardsName))
                             {
                                 SendPrivateMessage(messageOutput, characterName);
+                            }
+                            
+                            if(secretDraw)
+                            {
+                                string newMessageOutput = "[i]" + cardDrawingCharacterString + ": " + deckTypeString + "Card" + cardsS + " drawn: (secret)[/i]";
+                                SendMessageInChannel(newMessageOutput, channel);
+                            }
+                            else
+                            {
+                                SendMessageInChannel(messageOutput, channel);
+                            }
+
+                        }
+                    }
+                    break;
+                case "discardcard":
+                    {
+                        if (!string.IsNullOrEmpty(channel))
+                        {
+                            bool all = false;
+                            bool redraw = false;
+                            bool secretDraw = false;
+                            string characterDrawName = GetCharacterDrawNameFromCommandTerms(characterName, terms);
+                            if (terms != null && terms.Length >= 1 && terms.Contains("all"))
+                                all = true;
+                            if (terms != null && terms.Length >= 1 && terms.Contains("redraw"))
+                                redraw = true;
+                            if (terms != null && terms.Length >= 1 && (terms.Contains("s") || terms.Contains("secret")))
+                                secretDraw = true;
+
+                            List<int> discardsTemp = Utils.GetAllNumbersFromInputs(terms);
+                            List<int> discards = new List<int>();
+
+                            //decrease all the numbers by 1 to match array indexes, rather than the card position for a player
+                            if(discardsTemp.Count > 0)
+                            {
+                                foreach (int i in discardsTemp)
+                                {
+                                    discards.Add(i - 1);
+                                }
+                            }
+
+                            string cardsS = "";
+                            if (discards.Count > 1)
+                                cardsS = "s";
+
+                            DeckType deckType = GetDeckTypeFromCommandTerms(terms);
+
+                            string deckTypeString = Utils.GetDeckTypeStringHidePlaying(deckType);
+                            string cardDrawingCharacterString = "[user]" + characterDrawName + "[/user]";
+                            if (characterDrawName == DiceBot.DealerName)
+                                cardDrawingCharacterString = "The dealer";
+                            if (characterDrawName == DiceBot.BurnCardsName)
+                                cardDrawingCharacterString = "Burned";
+
+                            int numberDiscards = 0;
+                            string messageOutput = "[i]" + cardDrawingCharacterString + ": " + deckTypeString + "Card" + cardsS + " discarded:[/i] " + DiceBot.DiscardCards(discards, all, channel, deckType, characterDrawName, out numberDiscards);
+                            if(redraw)
+                            {
+                                messageOutput += "\n [i]Redrawn:[/i] " + DiceBot.DrawCards(numberDiscards, false, true, channel, deckType, characterDrawName);
+                            }
+                                
+                            if (secretDraw && !(characterDrawName == DiceBot.DealerName || characterDrawName == DiceBot.BurnCardsName))
+                            {
+                                SendPrivateMessage(messageOutput, characterName);
+                            }
+                            
+                            if (secretDraw)
+                            {
+                                string redrawSecretString = redraw ? " (and redrew)" : "";
+                                string newMessageOutput = "[i]" + cardDrawingCharacterString + ": " + deckTypeString + "Card" + cardsS + " discarded: (secret)" + redrawSecretString + "[/i] ";
+                                SendMessageInChannel(newMessageOutput, channel);
                             }
                             else
                             {
@@ -307,8 +493,13 @@ namespace FChatDicebot
                             bool jokers = false;
                             if (commandTerms != null && commandTerms.Length >= 1 && terms.Contains("j"))
                                 jokers = true;
-                            DiceBot.ResetDeck(jokers, channel);
-                            SendMessageInChannel("[i]Channel deck reset." + (jokers ? " (contains jokers)" : "") + "[/i]", channel);
+
+                            DeckType deckType = GetDeckTypeFromCommandTerms(terms);
+
+                            string deckTypeString = Utils.GetDeckTypeStringHidePlaying(deckType);
+
+                            DiceBot.ResetDeck(jokers, channel, deckType);
+                            SendMessageInChannel("[i]" + deckTypeString + "Channel deck reset." + (jokers ? " (contains jokers)" : "") + "[/i]", channel);
                         }
                     }
                     break;
@@ -319,8 +510,13 @@ namespace FChatDicebot
                             bool fullShuffle = false;
                             if (commandTerms != null && commandTerms.Length >= 1 && terms.Contains("eh"))
                                 fullShuffle = true;
-                            DiceBot.ShuffleDeck(DiceBot.random, channel, fullShuffle);
-                            SendMessageInChannel("[i]Channel deck shuffled. " + (fullShuffle ? "Hands emptied." : "") + "[/i]", channel);
+
+                            DeckType deckType = GetDeckTypeFromCommandTerms(terms);
+
+                            string deckTypeString = Utils.GetDeckTypeStringHidePlaying(deckType);
+
+                            DiceBot.ShuffleDeck(DiceBot.random, channel, deckType, fullShuffle);
+                            SendMessageInChannel("[i]" + deckTypeString + "Channel deck shuffled. " + (fullShuffle ? "Hands emptied." : "") + "[/i]", channel);
                         }
                     }
                     break;
@@ -328,8 +524,11 @@ namespace FChatDicebot
                     {
                         if (!string.IsNullOrEmpty(channel))
                         {
-                            DiceBot.EndHand(channel);
-                            SendMessageInChannel("[i]All hands have been emptied.[/i]", channel);
+                            DeckType deckType = GetDeckTypeFromCommandTerms(terms);
+
+                            string deckTypeString = Utils.GetDeckTypeStringHidePlaying(deckType);
+                            DiceBot.EndHand(channel, deckType);
+                            SendMessageInChannel("[i]" + deckTypeString + "All hands have been emptied.[/i]", channel);
                         }
                     }
                     break;
@@ -337,8 +536,20 @@ namespace FChatDicebot
                     {
                         if (!string.IsNullOrEmpty(channel))
                         {
-                            Hand h = DiceBot.GetHand(channel, characterName);
-                            SendMessageInChannel("[i]Showing [user]" + characterName + "[/user]'s hand: [/i]" + h.ToString(), channel);
+                            string characterDrawName = GetCharacterDrawNameFromCommandTerms(characterName, terms);
+
+                            DeckType deckType = GetDeckTypeFromCommandTerms(terms);
+
+                            string deckTypeString = Utils.GetDeckTypeStringHidePlaying(deckType);
+                            Hand h = DiceBot.GetHand(channel, deckType, characterDrawName);
+
+                            string outputString = "[i]" + deckTypeString + "Showing [user]" + characterDrawName + "[/user]'s hand: [/i]" + h.ToString();
+                            if(characterDrawName == DiceBot.BurnCardsName)
+                                 outputString = "[i]" + deckTypeString + "Showing burned cards: [/i]" + h.ToString();
+                            if(characterDrawName == DiceBot.DealerName)
+                                 outputString = "[i]" + deckTypeString + "Showing the dealer's hand: [/i]" + h.ToString();
+
+                            SendMessageInChannel(outputString, channel);
                         }
                     }
                     break;
@@ -346,11 +557,15 @@ namespace FChatDicebot
                     {
                         if (!string.IsNullOrEmpty(channel))
                         {
-                            if (DiceBot.IsCharacterAdmin(characterName))
+                            if (Utils.IsCharacterAdmin(AccountSettings.AdminCharacters, characterName))
                             {
-                                Deck a = DiceBot.GetDeck(channel);
+                                DeckType deckType = GetDeckTypeFromCommandTerms(terms);
 
-                                SendMessageInChannel("[i]Channel deck contents: [/i]" + a.ToString(), channel);
+                                string deckTypeString = Utils.GetDeckTypeStringHidePlaying(deckType);
+
+                                Deck a = DiceBot.GetDeck(channel, deckType);
+
+                                SendMessageInChannel("[i]" + deckTypeString + "Channel deck contents: [/i]" + a.ToString(), channel);
                             }
                             else
                             {
@@ -359,18 +574,49 @@ namespace FChatDicebot
                         }
                     }
                     break;
+                case "deckinfo":
+                    {
+                        if (!string.IsNullOrEmpty(channel))
+                        {
+                            DeckType deckType = GetDeckTypeFromCommandTerms(terms);
+
+                            string deckTypeString = Utils.GetDeckTypeStringHidePlaying(deckType);
+
+                            Deck a = DiceBot.GetDeck(channel, deckType);
+                            string cardsString = a.GetCardsRemaining() + " / " + a.GetTotalCards();
+                            string jokersString = a.ContainsJokers()? " [i](contains jokers)[/i] " : "";
+                            SendMessageInChannel("[i]" + deckTypeString + "Channel deck cards remaining: [/i]" + cardsString + jokersString, channel);
+                        }
+                    }
+                    break;
                 case "botinfo":
                     {
                         if (!string.IsNullOrEmpty(channel))
+                        {
+                            int channelsNumber = ChannelsJoined.Count();
+                            TimeSpan onlineTime =  DateTime.UtcNow - LoginTime;
                             SendMessageInChannel("Dice Bot was developed by [user]Darkness Syndra[/user] on 10/12/2020"
-                                + "\nversion " + DiceBot.Version
+                                + "\nversion " + Version 
+                                + "\ncurrently operating in " + channelsNumber + " channels."
+                                + "\nonline for " + Utils.GetTimeSpanPrint(onlineTime)
                                 + "\nfor a list of commands, see the profile [user]Dice Bot[/user].", channel);
+                        }
+                    }
+                    break;
+                case "uptime":
+                    {
+                        if (!string.IsNullOrEmpty(channel))
+                        {
+                            int channelsNumber = ChannelsJoined.Count();
+                            TimeSpan onlineTime = DateTime.UtcNow - LoginTime;
+                            SendMessageInChannel("Dicebot has been online for " + Utils.GetTimeSpanPrint(onlineTime), channel);
+                        }
                     }
                     break;
                 case "help":
                     {
                         if (!string.IsNullOrEmpty(channel))
-                            SendMessageInChannel("Commands:\n!roll\n!drawcard\n!resetdeck\n!shuffledeck\n!endhand\n!showhand\n!botinfo\n!joinchannel\n!help\nFor full information on commands, see the profile [user]Dice Bot[/user].", channel);
+                            SendMessageInChannel("Commands:\n!roll\n!drawcard,!resetdeck,!shuffledeck,!endhand,!showhand,!deckinfo\n!joinchannel\n!botinfo,!uptime,!help\nFor full information on commands, see the profile [user]Dice Bot[/user].", channel);
                     }
                     break;
                 case "joinchannel":
@@ -392,6 +638,46 @@ namespace FChatDicebot
                         }
                     }
                     break;
+                case "leavethischannel":
+                    {
+                        if (!string.IsNullOrEmpty(channel))
+                        {
+                            SendMessageInChannel("Goodbye~", channel);
+                            LeaveChannel(channel);
+                        }
+                    }
+                    break;
+                case "setstartingchannel":
+                    {
+                        if (!string.IsNullOrEmpty(channel))
+                        {
+                            StartingChannel existing = StartingChannels.FirstOrDefault(a => a.Code == channel.ToLower());
+
+                            string sendMessage = "[b]Added[/b] ";
+
+                            if (existing != null)
+                            {
+                                sendMessage = "[b]Removed[/b] ";
+                                StartingChannels.Remove(existing);
+                            }
+                            else
+                            {
+                                StartingChannel newChannel = new StartingChannel()
+                                {
+                                    Code = channel.ToLower(),
+                                    CharacterInvitedName = characterName,
+                                    Essential = false,
+                                    Name = channel.ToLower()
+                                };
+                                StartingChannels.Add(newChannel);
+                            }
+
+                            Utils.WriteToFileAsData(StartingChannels, Utils.GetTotalFileName(FileFolder, StartingChannelsFileName));
+
+                            SendMessageInChannel(sendMessage, channel);
+                        }
+                    }
+                    break;
                 case "nope":
                     {
                         if (!string.IsNullOrEmpty(channel))
@@ -399,6 +685,28 @@ namespace FChatDicebot
                     }
                     break;
             }
+        }
+
+        private DeckType GetDeckTypeFromCommandTerms(string[] terms)
+        {
+            DeckType deckType = DeckType.Playing;
+            if (terms != null && terms.Length >= 1 && terms.Contains("tarot"))
+                deckType = DeckType.Tarot;
+            if (terms != null && terms.Length >= 1 && terms.Contains("manythings"))
+                deckType = DeckType.ManyThings;
+
+            return deckType;
+        }
+
+        private string GetCharacterDrawNameFromCommandTerms(string characterName, string[] terms)
+        {
+            string characterDrawName = characterName;
+            if (terms != null && terms.Length >= 1 && terms.Contains("dealer"))
+                characterDrawName = DiceBot.DealerName;
+            if (terms != null && terms.Length >= 1 && terms.Contains("burn"))
+                characterDrawName = DiceBot.BurnCardsName;
+
+            return characterDrawName;
         }
     }
 }

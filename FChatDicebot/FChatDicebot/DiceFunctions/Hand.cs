@@ -30,5 +30,18 @@ namespace FChatDicebot.DiceFunctions
         {
             return 0;
         }
+
+        public DeckCard GetCardAtIndex(int i)
+        {
+            if (i < Cards.Count && i >= 0)
+                return Cards[i];
+            else
+                return null;
+        }
+
+        public int CardsCount()
+        {
+            return Cards.Count();
+        }
     }
 }

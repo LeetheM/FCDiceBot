@@ -11,15 +11,12 @@ namespace FChatDicebot.DiceFunctions
         public const int MaximumDice = 100;
         public const int MaximumSides = 100000;
         public const int MaximumCommandLength = 1000;
+        public const int MaximumHandSize = 20;
 
         public static List<char> ValidOperators = new List<char>(){ '+', '-', '*', '/' };
 
-        public static List<string> AdminCharacters = new List<string>() {
-            "Admin1", "Admin2", "Admin3"};
-        public const string Version = "1.01";
-
-        //uses single deck...
-        public Deck Deck;
+        public const string DealerName = "the_dealer";
+        public const string BurnCardsName = "burn_cards";
 
         public List<Deck> ChannelDecks;
         public List<Hand> Hands;
@@ -27,9 +24,6 @@ namespace FChatDicebot.DiceFunctions
         public DiceBot()
         {
             random = new System.Random();
-            Deck = new Deck();
-            Deck.FillDeck(false);
-            Deck.ShuffleFullDeck(random);
 
             ChannelDecks = new List<Deck>();
             Hands = new List<Hand>();
@@ -428,7 +422,7 @@ namespace FChatDicebot.DiceFunctions
             return returnInt;
         }
         
-        public string DrawCards(int numberDraws, bool includeJoker, bool fromDeck, string deckId, string character)
+        public string DrawCards(int numberDraws, bool includeJoker, bool fromDeck, string channelId, DeckType deckType, string character)
         {
             if (numberDraws <= 0)
                 numberDraws = 1;
@@ -438,7 +432,7 @@ namespace FChatDicebot.DiceFunctions
 
             string totalDrawString = "";
 
-            Hand thisCharacterHand = GetHand(deckId, character);
+            Hand thisCharacterHand = GetHand(channelId, deckType, character);
 
             bool showHand = false;
             if (!thisCharacterHand.Empty())
@@ -449,11 +443,25 @@ namespace FChatDicebot.DiceFunctions
                 if (!string.IsNullOrEmpty(totalDrawString))
                     totalDrawString += ", ";
 
-                DeckCard d = DrawCard(includeJoker, fromDeck, deckId);
+                if(thisCharacterHand.CardsCount() >= MaximumHandSize)
+                {
+                    totalDrawString += "(maximum hand size reached!)";
+                    break;
+                }
 
-                thisCharacterHand.AddCard(d);//.add(d);
-                
-                totalDrawString += d.ToString();
+                DeckCard d = DrawCard(includeJoker, fromDeck, channelId, deckType);
+
+                if(d!= null)
+                {
+                    thisCharacterHand.AddCard(d);
+
+                    totalDrawString += d.ToString();
+                }
+                else
+                {
+                    totalDrawString += "(out of cards)";
+                    break;
+                }
             }
             if(showHand)
             {
@@ -463,13 +471,80 @@ namespace FChatDicebot.DiceFunctions
             return totalDrawString;
         }
 
-        public DeckCard DrawCard(bool includeJoker, bool fromDeck, string deckId)
+        public string DiscardCards(List<int> discardsList, bool all, string channelId, DeckType deckType, string character, out int actualDiscards)
+        {
+            actualDiscards = 0;
+
+            Hand thisCharacterHand = GetHand(channelId, deckType, character);
+
+            if (thisCharacterHand.Empty())
+                return "(hand was empty)";
+
+            if (all)
+            {
+                discardsList = new List<int>();
+                for(int i = 0; i < thisCharacterHand.CardsCount(); i++)
+                {
+                    discardsList.Add(i);
+                }
+            }
+
+            if (discardsList == null || discardsList.Count <= 0)
+                discardsList = new List<int>() { 0 };
+
+            if (discardsList.Count > 10)
+                discardsList = discardsList.Take(10).ToList();
+
+            string totalDrawString = "";
+
+            bool showHand = false;
+            if (!thisCharacterHand.Empty())
+                showHand = true;
+
+            int currentHandSize = thisCharacterHand.CardsCount();
+
+            List<DeckCard> newHandCards = new List<DeckCard>();
+
+            for (int i = 0; i < currentHandSize; i++ )
+            {
+                if(discardsList.Contains(i))
+                {
+                    if (!string.IsNullOrEmpty(totalDrawString))
+                        totalDrawString += ", ";
+
+                    totalDrawString += thisCharacterHand.GetCardAtIndex(i).ToString();
+                }
+                else
+                {
+                    newHandCards.Add(thisCharacterHand.GetCardAtIndex(i));
+                }
+            }
+
+            thisCharacterHand.ResetHand();
+
+            foreach(DeckCard d in newHandCards)
+            {
+                thisCharacterHand.AddCard(d);
+            }
+
+            actualDiscards = currentHandSize - thisCharacterHand.CardsCount();
+
+            if (showHand)
+            {
+                totalDrawString += "\n[i]Current Hand: [/i]" + thisCharacterHand.ToString();
+            }
+
+            return totalDrawString;
+        }
+
+
+        public DeckCard DrawCard(bool includeJoker, bool fromDeck, string channelId, DeckType deckType)
         {
             DeckCard rtnCard = new DeckCard();
 
             if (fromDeck)
             {
-                Deck thisDeck = GetDeck(deckId);
+                Deck thisDeck = GetDeck(channelId, deckType);
                 DeckCard drawn = thisDeck.DrawCard();
 
                 rtnCard = drawn;
@@ -488,15 +563,15 @@ namespace FChatDicebot.DiceFunctions
             return rtnCard;
         }
 
-        public void ShuffleDeck(Random r, string deckId, bool fullShuffle)
+        public void ShuffleDeck(Random r, string channelId, DeckType deckType, bool fullShuffle)
         {
-            Deck relevantDeck = GetDeck(deckId);
+            Deck relevantDeck = GetDeck(channelId, deckType);
 
             if (relevantDeck != null)
             {
                 if (fullShuffle)
                 {
-                    EndHand(deckId);
+                    EndHand(channelId, deckType);
                     relevantDeck.ShuffleFullDeck(r);
                 }
                 else
@@ -504,23 +579,24 @@ namespace FChatDicebot.DiceFunctions
             }
         }
 
-        public void ResetDeck(bool jokers, string deckId)
+        public void ResetDeck(bool jokers, string channelId, DeckType deckType)
         {
-            Deck relevantDeck = GetDeck(deckId);
+            Deck relevantDeck = GetDeck(channelId, deckType);
 
-            EndHand(deckId);
+            EndHand(channelId, deckType);
 
             relevantDeck.FillDeck(jokers);
             relevantDeck.ShuffleFullDeck(random);
         }
 
-        public Deck GetDeck(string deckId)
+        public Deck GetDeck(string channelId, DeckType deckType)
         {
-            Deck thisDeck = ChannelDecks.FirstOrDefault(a => a.Id == deckId);
+            string deckKey = GetDeckKey(channelId, deckType);
+            Deck thisDeck = ChannelDecks.FirstOrDefault(a => a.Id == deckKey);
             if (thisDeck == null)
             {
-                thisDeck = new Deck();
-                thisDeck.Id = deckId;
+                thisDeck = new Deck(deckType);
+                thisDeck.Id = deckKey;
                 thisDeck.FillDeck(false);
                 thisDeck.ShuffleFullDeck(random);
                 ChannelDecks.Add(thisDeck);
@@ -529,22 +605,24 @@ namespace FChatDicebot.DiceFunctions
             return thisDeck;
         }
 
-        public void EndHand(string channel)
+        public void EndHand(string channelId, DeckType deckType)
         {
-            List<Hand> thisChannelHands = GetChannelHands(channel);
+            List<Hand> thisChannelHands = GetChannelHands(channelId, deckType);
+
             foreach(Hand h in thisChannelHands)
             {
                 h.ResetHand();
             }
         }
 
-        public Hand GetHand(string channelId, string character)
+        public Hand GetHand(string channelId, DeckType deckType, string character)
         {
-            Hand h = Hands.FirstOrDefault(a => a.Id == channelId && a.Character == character);
+            string deckKey = GetDeckKey(channelId, deckType);
+            Hand h = Hands.FirstOrDefault(a => a.Id == deckKey && a.Character == character);
             if (h == null)
             {
                 h = new Hand();
-                h.Id = channelId;
+                h.Id = deckKey;
                 h.Character = character;
                 Hands.Add(h);
             }
@@ -552,14 +630,15 @@ namespace FChatDicebot.DiceFunctions
             return h;
         }
 
-        public List<Hand> GetChannelHands(string channelId)
+        public List<Hand> GetChannelHands(string channelId, DeckType deckType)
         {
-            return Hands.Where(a => a.Id == channelId).ToList();
+            string deckKey = GetDeckKey(channelId, deckType);
+            return Hands.Where(a => a.Id == deckKey).ToList();
         }
 
-        public bool IsCharacterAdmin(string character)
+        public string GetDeckKey(string channelId, DeckType deckType)
         {
-            return AdminCharacters.Contains(character);
+            return channelId + "_" + deckType;
         }
     }
 }

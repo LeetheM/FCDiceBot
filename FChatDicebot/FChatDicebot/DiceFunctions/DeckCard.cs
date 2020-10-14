@@ -11,9 +11,15 @@ namespace FChatDicebot.DiceFunctions
         public int suit;
         public int number;
         public bool joker;
+        public string specialName;
 
         public override string ToString()
         {
+            if(!string.IsNullOrEmpty(specialName))
+            {
+                return specialName;
+            }
+
             string suitString = "";
             string numString = "";
             string colorString = "";

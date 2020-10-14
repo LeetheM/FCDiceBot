@@ -60,6 +60,7 @@
     <Compile Include="DiceFunctions\Hand.cs" />
     <Compile Include="Model\Base\iSocketCommand.cs" />
     <Compile Include="Model\BotMessage.cs" />
+    <Compile Include="Model\JCHserver.cs" />
     <Compile Include="Model\MSGserver.cs" />
     <Compile Include="Model\HLOserver.cs" />
     <Compile Include="Model\ERRserver.cs" />
@@ -79,6 +80,8 @@
     <Compile Include="Model\JCHclient.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SavedData\AccountSettings.cs" />
+    <Compile Include="SavedData\StartingChannel.cs" />
     <Compile Include="Tests.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>

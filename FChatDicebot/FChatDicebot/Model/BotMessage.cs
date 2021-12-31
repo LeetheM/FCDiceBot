@@ -14,7 +14,17 @@ namespace FChatDicebot.Model
 
         public string PrintedCommand()
         {
-            return string.Format("{0}{1}", messageType, (MessageDataFormat == null ? "" : " " + JsonConvert.SerializeObject(MessageDataFormat)));
+            string messageFull = string.Format("{0}{1}", messageType, (MessageDataFormat == null ? "" : " " + JsonConvert.SerializeObject(MessageDataFormat)));
+
+            if (messageFull.Length > BotMain.MaximumCharsInMessage && MessageDataFormat.GetType() == typeof(MSGclient))
+            {
+                MSGclient ms = (MSGclient)MessageDataFormat;
+                ms.message = Utils.LimitStringToNCharacters(ms.message, BotMain.MaximumCharsInMessage) + "(maximum message length reached)";
+
+                messageFull = string.Format("{0}{1}", messageType, (MessageDataFormat == null ? "" : " " + JsonConvert.SerializeObject(MessageDataFormat)));
+            }
+            
+            return messageFull;
         }
 
     }

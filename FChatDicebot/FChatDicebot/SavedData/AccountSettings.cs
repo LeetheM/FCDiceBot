@@ -13,5 +13,6 @@ namespace FChatDicebot.SavedData
         public string CharacterName;
         public string CName;
         public List<string> AdminCharacters;
+        public List<ChannelCharacter> TrustedCharacters;
     }
 }

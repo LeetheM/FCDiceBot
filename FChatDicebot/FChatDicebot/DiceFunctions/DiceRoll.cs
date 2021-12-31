@@ -14,6 +14,7 @@ namespace FChatDicebot.DiceFunctions
         public int Total;
         public List<int> Rolls;
         public List<int> HighlightedIndexes;
+        public List<int> CrossoutIndexes;
         public List<int> BoldedIndexes;
 
         public bool Error;
@@ -25,8 +26,12 @@ namespace FChatDicebot.DiceFunctions
         public int KeepLowest;
         public int RemoveHighest;
         public int RemoveLowest;
+        public int RerollNumber;
+        public int CountOver;
+        public int CountUnder;
 
         public bool Explode;
+        public int ExplodeThreshold;
 
         public DiceRoll()
         {
@@ -53,28 +58,97 @@ namespace FChatDicebot.DiceFunctions
             {
                 Rolls = new List<int>();
                 BoldedIndexes = new List<int>();
+                CrossoutIndexes = new List<int>();
                 HighlightedIndexes = new List<int>();
 
                 int explosionBonusDice = 0;
-                for (int i = 0; i < DiceRolled + explosionBonusDice; i++)
+                int rerollBonusDice = 0;
+                bool currentDieIsReroll = false;
+
+                for (int i = 0; (i < DiceRolled + explosionBonusDice + rerollBonusDice && i < DiceBot.MaximumRolls); i++)
                 {
                     int rollAmount = r.Next(DiceSides) + 1;
                     Rolls.Add(rollAmount);
 
-                    if(Explode && rollAmount == DiceSides && (explosionBonusDice <= (DiceBot.MaximumDice * 2)))
+                    if(RerollNumber != 0)
                     {
-                        if(TextFormat)
+                        if(RerollNumber == rollAmount && !currentDieIsReroll)
                         {
-                            BoldedIndexes.Add(i);
+                            CrossoutIndexes.Add(i);
+                            rerollBonusDice++;
+                            currentDieIsReroll = true;
                         }
-                        explosionBonusDice++;
+                        else
+                        {
+                            currentDieIsReroll = false;
+                        }
+                    }
+
+                    if(Explode)
+                    {
+                        if((ExplodeThreshold == 0 && rollAmount == DiceSides) ||
+                            (ExplodeThreshold > 1 && rollAmount >= ExplodeThreshold)
+                            && (explosionBonusDice <= (DiceBot.MaximumDice * 2)))
+                        {
+                            if(TextFormat)
+                            {
+                                BoldedIndexes.Add(i);
+                            }
+                            explosionBonusDice++;
+                        }
                     }
                 }
 
                 bool useKeptRollsTotal = false;
                 List<int> keptRolls = new List<int>();
 
-                if(KeepHighest != 0)
+                if(RerollNumber != 0)
+                {
+                    for (int i = 0; i < Rolls.Count; i++ )
+                    {
+                        if (CrossoutIndexes.Contains(i))
+                        {
+                        }
+                        else
+                        {
+                            keptRolls.Add(Rolls[i]);
+                        }
+                    }
+
+                    useKeptRollsTotal = true;
+                }
+                else if(CountOver != 0)
+                {
+                    List<int> countedRollsIndexes = new List<int>();
+                    for (int i = 0; i < Rolls.Count; i++)
+                    {
+                        if (Rolls[i] > CountOver)
+                        {
+                            countedRollsIndexes.Add(i);
+                            keptRolls.Add(1);
+                        }
+                    }
+
+                    useKeptRollsTotal = true;
+                    HighlightedIndexes = countedRollsIndexes;
+                }
+                else if (CountUnder != 0)
+                {
+                    List<int> countedRollsIndexes = new List<int>();
+
+                    for (int i = 0; i < Rolls.Count; i++)
+                    {
+                        if (Rolls[i] < CountUnder)
+                        {
+                            countedRollsIndexes.Add(i);
+                            keptRolls.Add(1);
+                        }
+                    }
+
+                    useKeptRollsTotal = true;
+                    HighlightedIndexes = countedRollsIndexes;
+                }
+                else if(KeepHighest != 0)
                 {
                     List<int> highestRollsIndexes = new List<int>();
                     List<int> highestRollsValues = new List<int>();
@@ -246,6 +320,11 @@ namespace FChatDicebot.DiceFunctions
                     rtnString += ", ";
 
                 string addition = i.ToString();
+                if(CrossoutIndexes != null && CrossoutIndexes.Contains(count))
+                {
+                    addition = "[s]" + addition + "[/s]";
+                }
+
                 if (HighlightedIndexes != null && HighlightedIndexes.Contains(count))
                 {
                     addition = "[color=yellow]" + addition + "[/color]";
@@ -265,8 +344,23 @@ namespace FChatDicebot.DiceFunctions
         public string GetConditionsString()
         {
             string explodeStr = "";
+
+            if(Rolls.Count >= DiceBot.MaximumRolls)
+            {
+                explodeStr += "(Maximum roll count reached.)";
+            }
+
             if (Explode)
-                explodeStr = "(exploding) ";
+            {
+                string explosionNumberPrint = (ExplodeThreshold > 0 ? ExplodeThreshold + "+" : DiceSides.ToString());
+                explodeStr += "(exploding on " + explosionNumberPrint + ") ";
+            }
+            if (RerollNumber > 0)
+                return explodeStr + "(re-rolling once on " + RerollNumber + ") ";
+            if (CountOver > 0)
+                return explodeStr + "(# of rolls over " + CountOver + ") ";
+            if (CountUnder > 0)
+                return explodeStr + "(# of rolls under " + CountUnder + ") ";
             if (KeepHighest > 0)
                 return explodeStr + "(keeping highest " + KeepHighest + ") ";
             if (KeepLowest > 0)

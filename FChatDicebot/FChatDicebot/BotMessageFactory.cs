@@ -10,7 +10,7 @@ namespace FChatDicebot
     public class BotMessageFactory
     {
         public const string IDN = "IDN", MSG = "MSG", PIN = "PIN", JCH = "JCH", PRI = "PRI";
-        public const string STA = "STA", LCH = "LCH";
+        public const string STA = "STA", LCH = "LCH", COL = "COL";
 
         public static BotMessage NewMessage(string messageType, iSocketCommand messageFormat)
         {

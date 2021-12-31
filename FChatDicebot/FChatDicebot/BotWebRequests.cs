@@ -59,6 +59,7 @@ namespace FChatDicebot
                     if (BotMain._debug)
                     {
                         Console.WriteLine("LoginToServer return message: " + rtnValue);
+                        Utils.AddToLog("LoginToServer return message: " + rtnValue, null);
                     }
 
                     GetApiTicketResponse rpt = JsonConvert.DeserializeObject<GetApiTicketResponse>(rtnValue);
@@ -71,6 +72,7 @@ namespace FChatDicebot
                     else
                     {
                         Console.WriteLine("Error: failed to parse result into GetApiTicketResponse");
+                        Utils.AddToLog("Error: failed to parse result into GetApiTicketResponse", null);
                     }
 
                     string saaaaaa = rtnValue + " ";
@@ -80,6 +82,8 @@ namespace FChatDicebot
             {
                 Console.WriteLine("WebException on LoginToServer Call: " + ex.Message);
                 Console.WriteLine("Retrying...");
+
+                Utils.AddToLog("WebException on LoginToServer Call: " + ex.Message, accountSettings);
                 LoginToServer(accountSettings, friendsList, bookmarksList);
             }
         }

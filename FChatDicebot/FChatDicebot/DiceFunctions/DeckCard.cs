@@ -12,12 +12,15 @@ namespace FChatDicebot.DiceFunctions
         public int number;
         public bool joker;
         public string specialName;
+        public string cardState;
+        public string description;
 
         public override string ToString()
         {
+            string cardStateString = string.IsNullOrEmpty(cardState)? "" : (" (" + cardState + ")" );
             if(!string.IsNullOrEmpty(specialName))
             {
-                return specialName;
+                return specialName + cardStateString;
             }
 
             string suitString = "";
@@ -79,7 +82,16 @@ namespace FChatDicebot.DiceFunctions
                 suitString = "";
             }
 
-            return colorString + numString + suitString + closeColorString;
+            return colorString + numString + suitString + closeColorString + cardStateString;
+        }
+
+        public string FullDescription()
+        {
+            string nameString = ToString();
+            string descriptionString = ": " + description;
+            if (string.IsNullOrEmpty(description))
+                descriptionString = "";
+            return "[b]" + nameString + "[/b]" + descriptionString;
         }
     }
 }

@@ -17,7 +17,7 @@ namespace FChatDicebot.DiceFunctions
             CollectionName = "deck";
         }
 
-        public void FillDeck(bool addJokers)
+        public void FillDeck(bool addJokers, FChatDicebot.SavedData.SavedDeck savedDeck = null)
         {
             Cards = new List<DeckCard>();
 
@@ -153,8 +153,72 @@ namespace FChatDicebot.DiceFunctions
                         Cards.Add(new DeckCard() { specialName = "The Void" });
                     }
                     break;
+
+                case DeckType.Custom:
+                    {
+                        if(savedDeck != null)
+                        {
+                            CreateFromDeckList(savedDeck.DeckList);
+                        }
+                    }
+                    break;
             }
 
+        }
+
+        public void InsertNewCards(List<DeckCard> addingCards)
+        {
+            if (Cards == null)
+                Cards = new List<DeckCard>();
+
+            foreach (DeckCard d in addingCards)
+            {
+                Cards.Add(d);
+            }
+        }
+
+        public void CreateFromDeckList(string deckList)
+        {
+            if(string.IsNullOrEmpty(deckList))
+                return;
+
+            string[] allcards = deckList.Split(',');
+            if (allcards == null || allcards.Count() == 0)
+                return;
+
+            Cards = new List<DeckCard>();
+
+            foreach (string s in allcards)
+            {
+                if(s.Contains('|'))
+                {
+                    string[] splitDesc = s.Split('|');
+                    Cards.Add(new DeckCard() { specialName = splitDesc[0], description = splitDesc[1] });
+                }
+                else
+                {
+                    Cards.Add(new DeckCard() { specialName = s });
+                }
+            }
+        }
+
+        public string GetDeckList()
+        {
+            if (Cards == null)
+                return null;
+
+            string deckList = "";
+            foreach (DeckCard d in Cards)
+            {
+                if (!string.IsNullOrEmpty(deckList))
+                    deckList += ",";
+
+                deckList += d.specialName;
+                if (!string.IsNullOrEmpty(d.description))
+                    deckList += "|" + d.description;
+            }
+
+            return deckList;
         }
 
         public void ShuffleFullDeck(System.Random r)
@@ -206,6 +270,17 @@ namespace FChatDicebot.DiceFunctions
             return returnCard;
         }
 
+        public void ResetCardStates()
+        {
+            if(Cards != null && Cards.Count > 0)
+            {
+                foreach(DeckCard d in Cards)
+                {
+                    d.cardState = null;
+                }
+            }
+        }
+
         public int GetCardsRemaining()
         {
             return Cards.Count() - DeckPosition;
@@ -226,6 +301,7 @@ namespace FChatDicebot.DiceFunctions
     {
         Playing,
         Tarot,
-        ManyThings
+        ManyThings,
+        Custom
     }
 }

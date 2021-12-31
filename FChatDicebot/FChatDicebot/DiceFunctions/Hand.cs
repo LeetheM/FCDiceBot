@@ -13,7 +13,17 @@ namespace FChatDicebot.DiceFunctions
         public Hand()
         {
             ResetHand();
-            CollectionName = "hand";
+            CollectionName = BotMain.HandCollectionName;// "hand";
+        }
+
+        public void SetCollectionName(string newName)
+        {
+            CollectionName = newName;
+        }
+
+        public string GetCollectionName()
+        {
+            return CollectionName;
         }
 
         public void ResetHand()

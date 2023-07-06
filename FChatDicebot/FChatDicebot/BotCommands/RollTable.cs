@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FChatDicebot.BotCommands.Base;
 using FChatDicebot.SavedData;
+using FChatDicebot.DiceFunctions;
 
 namespace FChatDicebot.BotCommands
 {
@@ -27,11 +28,32 @@ namespace FChatDicebot.BotCommands
             {
                 bool includeLabel = true;
                 bool secondaryRolls = true;
+                int dataX = 0;
+                int dataY = 0;
+                int dataZ = 0;
 
-                if (terms != null && terms.Length >= 1 && terms.Contains("nolabel"))
-                    includeLabel = false;
-                if (terms != null && terms.Length >= 1 && terms.Contains("nosecondary"))
-                    secondaryRolls = false;
+                if(terms != null && terms.Length >= 1 )
+                {
+                    if (terms != null && terms.Length >= 1 && terms.Contains("nolabel"))
+                        includeLabel = false;
+                    if (terms != null && terms.Length >= 1 && terms.Contains("nosecondary"))
+                        secondaryRolls = false;
+                    string foundTerm = terms.FirstOrDefault(a => a.StartsWith("x"));
+                    if (foundTerm != null)
+                    {
+                        int.TryParse(foundTerm.Replace(" ", "").Replace("x=", ""), out dataX);
+                    }
+                    foundTerm = terms.FirstOrDefault(a => a.StartsWith("y"));
+                    if (foundTerm != null)
+                    {
+                        int.TryParse(foundTerm.Replace(" ", "").Replace("y=", ""), out dataY);
+                    }
+                    foundTerm = terms.FirstOrDefault(a => a.StartsWith("z"));
+                    if (foundTerm != null)
+                    {
+                        int.TryParse(foundTerm.Replace(" ", "").Replace("z=", ""), out dataZ);
+                    }
+                }
 
                 int rollModifier = commandController.GetRollModifierFromCommandTerms(terms);
                 string tableName = commandController.GetTableNameFromCommandTerms(terms);
@@ -40,13 +62,13 @@ namespace FChatDicebot.BotCommands
 
                 if(savedTable.DefaultTable || thisChannel.AllowCustomTableRolls)
                 {
-                    string sendMessage = bot.DiceBot.GetRollTableResult(bot.SavedTables, tableName, characterName, channel, rollModifier, includeLabel, secondaryRolls, 3);
+                    string sendMessage = bot.DiceBot.GetRollTableResult(bot.SavedTables, tableName, characterName, channel, rollModifier, includeLabel, secondaryRolls, dataX, dataY, dataZ, DiceBot.MaximumSecondaryTableRolls);
 
                     bot.SendMessageInChannel(sendMessage, channel);
                 }
                 else
                 {
-                    bot.SendMessageInChannel("Only default talbes are allowed in this channel under " + Utils.GetCharacterUserTags("Dice Bot") + "'s settings for this channel.", channel);
+                    bot.SendMessageInChannel("Only default tables are allowed in this channel under " + Utils.GetCharacterUserTags("Dice Bot") + "'s settings for this channel.", channel);
                 }
             }
             else
@@ -54,5 +76,11 @@ namespace FChatDicebot.BotCommands
                 bot.SendMessageInChannel(Name + " is currently not allowed in this channel under " + Utils.GetCharacterUserTags("Dice Bot") + "'s settings for this channel.", channel);
             }
         }
+    }
+
+    public class RollVariableData
+    {
+        public string Name;
+        public int Value;
     }
 }

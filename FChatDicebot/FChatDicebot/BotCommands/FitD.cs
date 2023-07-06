@@ -15,7 +15,7 @@ namespace FChatDicebot.BotCommands
             Name = "fitd";
             RequireBotAdmin = false;
             RequireChannelAdmin = false;
-            RequireChannel = true;
+            RequireChannel = false;
             LockCategory = CommandLockCategory.NONE;
         }
 
@@ -31,10 +31,17 @@ namespace FChatDicebot.BotCommands
             }
             else
             {
-                resultString = bot.DiceBot.RollFitD(numberRolled);
+                resultString = bot.DiceBot.RollFitD(numberRolled, channel, characterName);
             }
 
-            bot.SendMessageInChannel(resultString, channel);
+            if (!commandController.MessageCameFromChannel(channel))
+            {
+                bot.SendPrivateMessage(resultString, characterName);
+            }
+            else
+            {
+                bot.SendMessageInChannel(resultString, channel);
+            }
         }
     }
 }

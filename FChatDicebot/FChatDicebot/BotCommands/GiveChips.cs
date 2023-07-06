@@ -53,7 +53,7 @@ namespace FChatDicebot.BotCommands
                     {
                         messageString = bot.DiceBot.GiveChips(characterName, targetUserName, channel, giveAmount, all);
 
-                        commandController.SaveChipsToDisk();
+                        commandController.SaveChipsToDisk("GiveChips");
                     }
                 }
 

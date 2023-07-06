@@ -14,7 +14,7 @@ namespace FChatDicebot.BotCommands
             Name = "roll";
             RequireBotAdmin = false;
             RequireChannelAdmin = false;
-            RequireChannel = true;
+            RequireChannel = false;
             LockCategory = CommandLockCategory.NONE;
         }
 
@@ -24,10 +24,19 @@ namespace FChatDicebot.BotCommands
                 bot.SendMessageInChannel("Command recieved: " + Utils.PrintList(terms), channel);
 
             bool debugOverride = false;
-            string finalResult = bot.DiceBot.GetRollResult(terms, debugOverride);
+            string finalResult = bot.DiceBot.GetRollResult(terms, characterName, channel, debugOverride);
 
             string userName = "[i]" + Utils.GetCharacterUserTags(characterName) + "[/i]: ";
-            bot.SendMessageInChannel(userName + finalResult, channel);
+            //bot.SendMessageInChannel(userName + finalResult, channel);
+
+            if (!commandController.MessageCameFromChannel(channel))
+            {
+                bot.SendPrivateMessage(userName + finalResult, characterName);
+            }
+            else
+            {
+                bot.SendMessageInChannel(userName + finalResult, channel);
+            }
 
             if (BotMain._debug)
                 Console.WriteLine("Command finished: " + finalResult);

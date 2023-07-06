@@ -59,10 +59,10 @@ namespace FChatDicebot.BotCommands
                             coupon.Redeemed = true;
                             coupon.RedeemedBy = characterName;
 
-                            messageString = "Chips code redeemed.\n" + bot.DiceBot.AddChips(characterName, channel, coupon.ChipsAmount, false) +
-                                "\n[sub]Thank you for purchasing Dice Bot chips![/sub]";
+                            messageString = "Chips code redeemed. " + bot.DiceBot.AddChips(characterName, channel, coupon.ChipsAmount, false) +
+                                " [sub]Thank you for purchasing Dice Bot chips![/sub]";
 
-                            commandController.SaveChipsToDisk();
+                            commandController.SaveChipsToDisk("RedeemChips");
                             commandController.SaveCouponsToDisk();
                         }
                     }

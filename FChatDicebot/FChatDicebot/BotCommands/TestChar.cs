@@ -15,7 +15,7 @@ namespace FChatDicebot.BotCommands
             Name = "testchar";
             RequireBotAdmin = true;
             RequireChannelAdmin = false;
-            RequireChannel = true;
+            RequireChannel = false;
             LockCategory = CommandLockCategory.NONE;
         }
 
@@ -27,7 +27,14 @@ namespace FChatDicebot.BotCommands
                 int.TryParse(terms[0], out numberCharacters);
             }
 
-            bot.SendMessageInChannel("[b][ADMIN] [/b]" + Utils.GetStringOfNLength(numberCharacters), channel);
+            if (!commandController.MessageCameFromChannel(channel))
+            {
+                bot.SendPrivateMessage("[b][ADMIN] [/b]" + Utils.GetStringOfNLength(numberCharacters), characterName);
+            }
+            else
+            {
+                bot.SendMessageInChannel("[b][ADMIN] [/b]" + Utils.GetStringOfNLength(numberCharacters), channel);
+            }
         }
     }
 }

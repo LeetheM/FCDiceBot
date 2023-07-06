@@ -16,7 +16,7 @@ namespace FChatDicebot.BotCommands
             Name = "setstatus";
             RequireBotAdmin = true;
             RequireChannelAdmin = false;
-            RequireChannel = true;
+            RequireChannel = false;
             LockCategory = CommandLockCategory.NONE;
         }
 
@@ -25,7 +25,15 @@ namespace FChatDicebot.BotCommands
             string newStatus = Utils.GetFullStringOfInputs(rawTerms);
 
             bot.SetStatus(STAStatus.Online, newStatus);
-            bot.SendMessageInChannel("[b][ADMIN] Status updated.[/b]", channel);
+
+            if (!commandController.MessageCameFromChannel(channel))
+            {
+                bot.SendPrivateMessage("[b][ADMIN] Status updated.[/b]", characterName);
+            }
+            else
+            {
+                bot.SendMessageInChannel("[b][ADMIN] Status updated.[/b]", channel);
+            }
         }
     }
 }

@@ -16,7 +16,7 @@ namespace FChatDicebot.BotCommands
             Name = "mytables";
             RequireBotAdmin = false;
             RequireChannelAdmin = false;
-            RequireChannel = true;
+            RequireChannel = false;
             LockCategory = CommandLockCategory.SavedTables;
         }
 
@@ -38,7 +38,15 @@ namespace FChatDicebot.BotCommands
                 sendMessage = "Tables found for " + Utils.GetCharacterUserTags(characterName) + ": " + tablesList;
             }
 
-            bot.SendMessageInChannel(sendMessage, channel);
+            if (!commandController.MessageCameFromChannel(channel))
+            {
+                bot.SendPrivateMessage(sendMessage, characterName);
+            }
+            else
+            {
+                bot.SendMessageInChannel(sendMessage, channel);
+            }
+
         }
     }
 }

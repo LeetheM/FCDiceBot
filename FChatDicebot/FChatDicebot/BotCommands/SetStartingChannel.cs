@@ -31,7 +31,7 @@ namespace FChatDicebot.BotCommands
             }
             existing.StartupChannel = !existing.StartupChannel;
 
-            Utils.WriteToFileAsData(bot.SavedChannelSettings, Utils.GetTotalFileName(BotMain.FileFolder, BotMain.ChannelSettingsFileName));
+            commandController.SaveChannelSettingsToDisk();
 
             bot.SendMessageInChannel(sendMessage, channel);
         }

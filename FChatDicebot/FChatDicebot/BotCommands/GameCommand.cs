@@ -31,42 +31,19 @@ namespace FChatDicebot.BotCommands
 
                 if (terms.Length < 1)
                 {
-                    messageString = "Error: This command requires a game name.";
+                    messageString = "Error: This command requires parameters.";
                 }
                 else
                 {
-                    IGame gametype = commandController.GetGameTypeFromCommandTerms(bot.DiceBot, terms);
+                    IGame gametype = commandController.GetGameTypeForCommand(bot.DiceBot, channel, terms, out messageString);
 
-                    if (gametype == null)
-                    {
-                        //check game sessions and see if this channel has a session for anything
-                        var gamesPresent = bot.DiceBot.GameSessions.Where(a => a.ChannelId == channel);
-                        if (gamesPresent.Count() == 0)
-                        {
-                            messageString = "Error: No game sessions are active in this channel to cancel.";
-                        }
-                        else if (gamesPresent.Count() > 1)
-                        {
-                            messageString = "Error: You must specify a game type if more than one game session exists in the channel.";
-                        }
-                        else if (gamesPresent.Count() == 1)
-                        {
-                            GameSession sesh = gamesPresent.First();
-                            gametype = sesh.CurrentGame;
-                        }
-                    }
-
-                    if(gametype == null)
-                    {
-                        messageString = "Error: Game type not found.";
-                    }
-                    else
+                    if(gametype != null)
                     {
                         GameSession sesh = bot.DiceBot.GetGameSession(channel, gametype, false);
 
                         if (sesh != null)
                         {
-                            messageString = bot.DiceBot.IssueGameCommand(characterName, channel, sesh, terms);
+                            messageString = bot.DiceBot.IssueGameCommand(characterName, channel, sesh, terms, rawTerms);
                         }
                         else
                         {

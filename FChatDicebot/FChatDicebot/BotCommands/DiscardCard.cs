@@ -21,7 +21,7 @@ namespace FChatDicebot.BotCommands
 
         public override void Run(BotMain bot, BotCommandController commandController, string[] rawTerms, string[] terms, string characterName, string channel, UserGeneratedCommand command)
         {
-            MoveCards.Run(bot, commandController, rawTerms, terms, characterName, channel, command, CardMoveType.DiscardCard);
+            MoveCards.Run(bot, commandController, rawTerms, terms, characterName, channel, command, CardPileId.Hand, CardPileId.Discard);
 
             //CardCommandOptions options = new CardCommandOptions(bot, commandController, rawTerms, terms, characterName, channel, command);
             //string deckTypeString = Utils.GetDeckTypeStringHidePlaying(options.deckType);

@@ -16,7 +16,7 @@ namespace FChatDicebot.BotCommands
             Name = "deletetable";
             RequireBotAdmin = false;
             RequireChannelAdmin = true;
-            RequireChannel = true;
+            RequireChannel = false;
             LockCategory = CommandLockCategory.SavedTables;
         }
 
@@ -24,12 +24,13 @@ namespace FChatDicebot.BotCommands
         {
             string tableName = commandController.GetTableNameFromCommandTerms(terms);
 
+            bool characterIsAdmin = Utils.IsCharacterAdmin(bot.AccountSettings.AdminCharacters, characterName);
             SavedRollTable deleteTable = Utils.GetTableFromId(bot.SavedTables, tableName);
 
             string sendMessage = "No tables found for [user]" + characterName + "[/user]";
             if (deleteTable != null)
             {
-                if (characterName == deleteTable.OriginCharacter)
+                if (characterName == deleteTable.OriginCharacter || characterIsAdmin)
                 {
                     bot.SavedTables.Remove(deleteTable);
 
@@ -43,7 +44,14 @@ namespace FChatDicebot.BotCommands
                 }
             }
 
-            bot.SendMessageInChannel(sendMessage, channel);
+            if (!commandController.MessageCameFromChannel(channel))
+            {
+                bot.SendPrivateMessage(sendMessage, characterName);
+            }
+            else
+            {
+                bot.SendMessageInChannel(sendMessage, channel);
+            }
         }
     }
 }

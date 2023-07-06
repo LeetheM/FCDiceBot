@@ -22,16 +22,31 @@ namespace FChatDicebot.BotCommands
         public override void Run(BotMain bot, BotCommandController commandController, string[] rawTerms, string[] terms, string characterName, string channel, UserGeneratedCommand command)
         {
             bool jokers = false;
-            if (terms != null && terms.Length >= 1 && terms.Contains("j"))
-                jokers = true;
+            int deckCopies = 1;
+            if (terms != null && terms.Length >= 1)
+            {
+                if (terms.Contains("j"))
+                    jokers = true;
+                if (terms.Contains("x2") || terms.Contains("double"))
+                    deckCopies = 2;
+                if (terms.Contains("x3") || terms.Contains("triple"))
+                    deckCopies = 3;
+                if (terms.Contains("x4") || terms.Contains("quadrouple"))
+                    deckCopies = 4;
+                if (terms.Contains("x5") || terms.Contains("quintuple"))
+                    deckCopies = 5;
+                if (terms.Contains("x6") || terms.Contains("sextuple"))
+                    deckCopies = 6;
+            }
 
             DeckType deckType = commandController.GetDeckTypeFromCommandTerms(terms);
 
             string customDeckName = Utils.GetCustomDeckName(characterName);
             string deckTypeString = Utils.GetDeckTypeStringHidePlaying(deckType, customDeckName);
+            string deckMultiplier = deckCopies > 1 ? " (x" + deckCopies + " decks combined)" : "";
 
-            bot.DiceBot.ResetDeck(jokers, channel, deckType, customDeckName);
-            bot.SendMessageInChannel("[i]" + deckTypeString + "Channel deck reset." + (jokers ? " (contains jokers)" : "") + "[/i]", channel);
+            bot.DiceBot.ResetDeck(jokers, deckCopies, channel, deckType, customDeckName);
+            bot.SendMessageInChannel("[i]" + deckTypeString + "Channel deck reset." + deckMultiplier + (jokers ? " (contains jokers)" : "") + "[/i]", channel);
         }
     }
 }

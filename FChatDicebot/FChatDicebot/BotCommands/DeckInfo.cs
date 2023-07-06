@@ -31,7 +31,7 @@ namespace FChatDicebot.BotCommands
             string sendString = "";
             if(a != null)
             {
-                string cardsString = a.GetCardsRemaining() + " / " + a.GetTotalCards();
+                string cardsString = a.GetCardsRatio();
                 string jokersString = a.ContainsJokers() ? " [i](contains jokers)[/i] " : "";
                 sendString = "[i]" + deckTypeString + "Channel deck cards remaining: [/i]" + cardsString + jokersString;
             }

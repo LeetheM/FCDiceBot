@@ -27,6 +27,7 @@ namespace FChatDicebot.BotCommands
 
             string customDeckName = Utils.GetCustomDeckName(characterName);
             string deckTypeString = Utils.GetDeckTypeStringHidePlaying(deckType, customDeckName);
+
             Hand h = bot.DiceBot.GetHand(channel, deckType, characterDrawName);
 
             string displayName = characterDrawName;
@@ -34,11 +35,11 @@ namespace FChatDicebot.BotCommands
                 displayName = displayName.Replace(DiceBot.PlaySuffix, "");
 
             string outputString = "[i]" + deckTypeString + "Showing [user]" + displayName + "[/user]'s " + h.GetCollectionName() + ": [/i]" + h.ToString();
-            if (characterDrawName == DiceBot.BurnCardsName)
+            if (characterDrawName == DiceBot.BurnCardsPlayerAlias)
                 outputString = "[i]" + deckTypeString + "Showing burned cards: [/i]" + h.ToString();
-            else if (characterDrawName == DiceBot.DealerName)
+            else if (characterDrawName == DiceBot.DealerPlayerAlias)
                 outputString = "[i]" + deckTypeString + "Showing the dealer's hand: [/i]" + h.ToString();
-            else if (characterDrawName == DiceBot.DiscardName)
+            else if (characterDrawName == DiceBot.DiscardPlayerAlias)
                 outputString = "[i]" + deckTypeString + "Showing discarded cards: [/i]" + h.ToString();
 
             bot.SendMessageInChannel(outputString, channel);

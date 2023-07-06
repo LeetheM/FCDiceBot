@@ -17,7 +17,7 @@ namespace FChatDicebot.BotCommands
             Name = "savecustomdeck";
             RequireBotAdmin = false;
             RequireChannelAdmin = true;
-            RequireChannel = true;
+            RequireChannel = false;
             LockCategory = CommandLockCategory.SavedTables;
         }
 
@@ -81,7 +81,7 @@ namespace FChatDicebot.BotCommands
 
                     Utils.WriteToFileAsData(bot.SavedDecks, Utils.GetTotalFileName(BotMain.FileFolder, BotMain.SavedDecksFileName));
 
-                    bot.DiceBot.ResetDeck(false, channel, DeckType.Custom, newDeckId);
+                    bot.DiceBot.ResetDeck(false, 1, channel, DeckType.Custom, newDeckId);
                     sendMessage = "[b]Success[/b]. Deck saved by [user]" + characterName + "[/user]. Draw from this deck using !drawcard custom";
                 }
             }
@@ -90,7 +90,14 @@ namespace FChatDicebot.BotCommands
                 sendMessage = "Failed to parse deck entry data. Make sure the Json is correctly formatted.";
             }
 
-            bot.SendMessageInChannel(sendMessage, channel);
+            if (!commandController.MessageCameFromChannel(channel))
+            {
+                bot.SendPrivateMessage(sendMessage, characterName);
+            }
+            else
+            {
+                bot.SendMessageInChannel(sendMessage, channel);
+            }
         }
     }
 }

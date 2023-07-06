@@ -27,6 +27,8 @@ namespace FChatDicebot.BotCommands
             ChannelSettings thisChannel = bot.GetChannelSettings(channel);
 
             bool setValue = false;
+            int setNumber = 0;
+            char setChar = '!';
 
             if (terms != null && terms.Length >= 1)
             {
@@ -42,28 +44,59 @@ namespace FChatDicebot.BotCommands
                     changed = SettingType.AllowTableInfo;
                 if (terms.Contains("allowchips"))
                     changed = SettingType.AllowChips;
+                if (terms.Contains("allowslots"))
+                    changed = SettingType.AllowSlots;
                 if (terms.Contains("allowgames"))
                     changed = SettingType.AllowGames;
+                if (terms.Contains("allowchesseicons"))
+                    changed = SettingType.AllowChessEicons;
+                if (terms.Contains("allowchess"))
+                    changed = SettingType.AllowChess;
                 if (terms.Contains("usevcaccount"))
                     changed = SettingType.UseVcAccountForChips;
                 if (terms.Contains("startupchannel"))
                     changed = SettingType.StartupChannel;
                 if (terms.Contains("startwith500chips"))
                     changed = SettingType.StartWith500Chips;
+                if (terms.Contains("startingchips"))
+                    changed = SettingType.StartingChips;
+                if (terms.Contains("removeslotscooldown"))
+                    changed = SettingType.RemoveSlotsCooldown;
+                if (terms.Contains("removeluckforecastcooldown"))
+                    changed = SettingType.RemoveLuckForecastCooldown;
+                if (terms.Contains("defaultslotsfruit"))
+                    changed = SettingType.DefaultSlotsFruit;
                 if (terms.Contains("onlyopaddchips"))
                     changed = SettingType.OnlyOpAddChips;
+                if (terms.Contains("slotsmultiplierlimit"))
+                    changed = SettingType.SlotsMultiplierLimit;
                 if (terms.Contains("onlyopbotcommands"))
                     changed = SettingType.OnlyOpBotCommands;
                 if (terms.Contains("onlyopdeckcontrols"))
                     changed = SettingType.OnlyOpDeckControls;
                 if (terms.Contains("onlyoptablecommands"))
                     changed = SettingType.OnlyOpTableCommands;
+                if (terms.Contains("commandprefix"))
+                    changed = SettingType.CommandPrefix;
 
                 if (terms.Contains("on") || terms.Contains("true"))
                     setValue = true;
-                if (terms.Contains("off") || terms.Contains("false"))
+                else if (terms.Contains("off") || terms.Contains("false"))
                     setValue = false;
+                else if(terms.Length > 1)
+                {
+                    int numberFound = Utils.GetNumberFromInputs(terms);
+                    setNumber = numberFound;
+                    if (numberFound < 0)
+                        numberFound = 0;
+
+                    var lastTerm = terms[terms.Length - 1];
+                    if(lastTerm.Length == 1)
+                        setChar = lastTerm.ToCharArray()[0];
+                }
             }
+
+
 
             switch (changed)
             {
@@ -87,8 +120,17 @@ namespace FChatDicebot.BotCommands
                 case SettingType.AllowChips:
                     thisChannel.AllowChips = setValue;
                     break;
+                case SettingType.AllowSlots:
+                    thisChannel.AllowSlots = setValue;
+                    break;
                 case SettingType.AllowGames:
                     thisChannel.AllowGames = setValue;
+                    break;
+                case SettingType.AllowChess:
+                    thisChannel.AllowChess = setValue;
+                    break;
+                case SettingType.AllowChessEicons:
+                    thisChannel.AllowChessEicons = setValue;
                     break;
                 case SettingType.UseVcAccountForChips:
                     thisChannel.UseVcAccountForChips = setValue;
@@ -96,8 +138,20 @@ namespace FChatDicebot.BotCommands
                 case SettingType.StartupChannel:
                     thisChannel.StartupChannel = setValue;
                     break;
+                case SettingType.RemoveSlotsCooldown:
+                    thisChannel.RemoveSlotsCooldown = setValue;
+                    break;
+                case SettingType.RemoveLuckForecastCooldown:
+                    thisChannel.RemoveLuckForecastCooldown = setValue;
+                    break;
+                case SettingType.DefaultSlotsFruit:
+                    thisChannel.DefaultSlotsFruit = setValue;
+                    break;
                 case SettingType.StartWith500Chips:
                     thisChannel.StartWith500Chips = setValue;
+                    break;
+                case SettingType.StartingChips:
+                    thisChannel.StartingChips = setNumber;
                     break;
                 case SettingType.OnlyOpAddChips:
                     {
@@ -114,6 +168,9 @@ namespace FChatDicebot.BotCommands
                         }
                     }
                     break;
+                case SettingType.SlotsMultiplierLimit:
+                    thisChannel.SlotsMultiplierLimit = setNumber;
+                    break;
                 case SettingType.OnlyOpBotCommands:
                     thisChannel.OnlyChannelOpsCanUseAnyBotCommands = setValue;
                     break;
@@ -122,6 +179,9 @@ namespace FChatDicebot.BotCommands
                     break;
                 case SettingType.OnlyOpTableCommands:
                     thisChannel.OnlyChannelOpsCanUseTableCommands = setValue;
+                    break;
+                case SettingType.CommandPrefix:
+                    thisChannel.CommandPrefix = setChar;
                     break;
             }
 
@@ -133,9 +193,15 @@ namespace FChatDicebot.BotCommands
             }
             else
             {
-                Utils.WriteToFileAsData(bot.SavedChannelSettings, Utils.GetTotalFileName(BotMain.FileFolder, BotMain.ChannelSettingsFileName));
+                commandController.SaveChannelSettingsToDisk();
 
-                string output = "(Channel setting updated) " + Utils.GetCharacterUserTags(characterName) + " set " + changed + " to " + setValue;
+                string output = "(Channel setting updated) " + Utils.GetCharacterUserTags(characterName) + " set " + changed + " to ";
+                if (changed == SettingType.CommandPrefix)
+                    output += setChar.ToString();
+                else if (changed == SettingType.SlotsMultiplierLimit || changed == SettingType.StartingChips)
+                    output += setNumber.ToString();
+                else
+                    output += setValue.ToString();
 
                 if (changed == SettingType.OnlyOpAddChips && thisChannel.ChipsClearance == ChipsClearanceLevel.DicebotAdmin)
                 {
@@ -156,6 +222,7 @@ namespace FChatDicebot.BotCommands
         AllowCustomTableRolls,
         AllowTableInfo,
         AllowChips,
+        AllowSlots,
         AllowGames,
         UseVcAccountForChips,
         StartupChannel,
@@ -163,7 +230,15 @@ namespace FChatDicebot.BotCommands
         OnlyOpBotCommands,
         OnlyOpDeckControls,
         OnlyOpTableCommands,
-        StartWith500Chips
+        StartWith500Chips,
+        RemoveSlotsCooldown,
+        RemoveLuckForecastCooldown,
+        DefaultSlotsFruit,
+        CommandPrefix,
+        AllowChessEicons,
+        AllowChess,
+        SlotsMultiplierLimit,
+        StartingChips
     }
 }
         ////todo: apply settings to code

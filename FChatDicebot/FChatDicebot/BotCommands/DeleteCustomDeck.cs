@@ -43,7 +43,14 @@ namespace FChatDicebot.BotCommands
                 }
             }
 
-            bot.SendMessageInChannel(sendMessage, channel);
+            if (!commandController.MessageCameFromChannel(channel))
+            {
+                bot.SendPrivateMessage(sendMessage, characterName);
+            }
+            else
+            {
+                bot.SendMessageInChannel(sendMessage, channel);
+            }
         }
     }
 }

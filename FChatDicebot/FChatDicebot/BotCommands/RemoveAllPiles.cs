@@ -39,7 +39,7 @@ namespace FChatDicebot.BotCommands
             {
                 string messageString = bot.DiceBot.RemoveAllChipsPiles(characterName, channel);
 
-                commandController.SaveChipsToDisk();
+                commandController.SaveChipsToDisk("RemoveAllPiles");
 
                 bot.SendMessageInChannel(messageString, channel);
             }

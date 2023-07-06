@@ -50,7 +50,7 @@ namespace FChatDicebot.BotCommands
                     {
                         messageString = bot.DiceBot.AddChips(characterName, channel, -1 * chipAmount, pot);
 
-                        commandController.SaveChipsToDisk();
+                        commandController.SaveChipsToDisk("RemoveChips");
                     }
                 }
 

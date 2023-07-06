@@ -22,11 +22,14 @@ namespace FChatDicebot.BotCommands
         public override void Run(BotMain bot, BotCommandController commandController, string[] rawTerms, string[] terms, string characterName, string channel, UserGeneratedCommand command)
         {
             DeckType deckType = commandController.GetDeckTypeFromCommandTerms(terms);
+            bool reveal = false;
+            if (terms != null && terms.Contains("reveal"))
+                reveal = true;
 
             string customDeckString = Utils.GetCustomDeckName(characterName);
             string deckTypeString = Utils.GetDeckTypeStringHidePlaying(deckType, customDeckString);
-            bot.DiceBot.EndHand(channel, deckType);
-            bot.SendMessageInChannel("[i]" + deckTypeString + "All hands have been emptied.[/i]", channel);
+            string rtn = bot.DiceBot.EndHand(channel, reveal, deckType);
+            bot.SendMessageInChannel("[i]" + rtn + "[/i]", channel);
         }
     }
 }

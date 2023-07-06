@@ -29,35 +29,18 @@ namespace FChatDicebot.BotCommands
             {
                 string messageString = "";
 
-                IGame gametype = commandController.GetGameTypeFromCommandTerms(bot.DiceBot, terms);
+                IGame gametype = commandController.GetGameTypeForCommand(bot.DiceBot, channel, terms, out messageString);
+
                 bool keepSession = terms.Contains("keepsession") || terms.Contains("keepgame");
                 bool endSession = terms.Contains("endsession") || terms.Contains("endgame");
 
-                if(gametype == null)
-                {
-                    //check game sessions and see if this channel has a session for anything
-                    var gamesParticipated = bot.DiceBot.GameSessions.Where(a => a.ChannelId == channel && a.Players.Contains(characterName));
-                    if(gamesParticipated.Count() == 0)
-                    {
-                        messageString = "Error: Game type not found.";
-                    }
-                    else if(gamesParticipated.Count() > 1)
-                    {
-                        messageString = "Error: You must specify a game type if you are in more than one game.";
-                    }
-                    else if (gamesParticipated.Count() == 1)
-                    {
-                        GameSession sesh = gamesParticipated.First();
-                        gametype = sesh.CurrentGame;
-                    }
-                }
                 if(gametype != null) //gametype can be set above after being null so this should no longer be 'else'
                 {
                     GameSession sesh = bot.DiceBot.GetGameSession(channel, gametype);
 
                     if (sesh != null)
                     {
-                        ChipPile potChips = bot.DiceBot.GetChipPile(DiceBot.PotName, channel);
+                        ChipPile potChips = bot.DiceBot.GetChipPile(DiceBot.PotPlayerAlias, channel);
 
                         if(sesh.Ante > 0 && potChips.Chips > 0)
                         {
@@ -80,14 +63,14 @@ namespace FChatDicebot.BotCommands
                         else
                         {
                             messageString = sesh.CurrentGame.GetStartingDisplay();
-                            messageString += "\n" + bot.DiceBot.StartGame(channel, gametype, bot, keepSession, endSession);
+                            messageString += "\n" + bot.DiceBot.StartGame(channel, characterName, gametype, bot, keepSession, endSession);
 
-                            if (sesh.CurrentGame.GetType() == typeof(Roulette))
+                            if (gametype.GetMinimumMsBetweenGames() > 0)// sesh.CurrentGame.GetType() == typeof(Roulette))
                             {
-                                bot.DiceBot.StartCountdownTimer(channel, gametype.GetGameName(), characterName, 5 * 60 * 1000);
+                                bot.DiceBot.StartCountdownTimer(channel, gametype.GetGameName(), characterName, gametype.GetMinimumMsBetweenGames());// 5 * 60 * 1000);
                             }
 
-                            commandController.SaveChipsToDisk();
+                            commandController.SaveChipsToDisk("StartGame");
                         }
                     }
                     else

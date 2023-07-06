@@ -38,12 +38,12 @@ namespace FChatDicebot.BotCommands
                 {
                     messageString = Utils.GetCharacterUserTags(characterName) + " was registered for a chips pile.";
 
-                    if(thisChannel.StartWith500Chips)
-                        messageString += "\n[b]500 chips[/b] were given to " + Utils.GetCharacterUserTags(characterName) + " to start.";
+                    if(thisChannel.StartingChips > 0)
+                        messageString += "\n[b]" + thisChannel.StartingChips + " chips[/b] were given to " + Utils.GetCharacterUserTags(characterName) + " to start.";
 
                     bot.DiceBot.AddChips(characterName, channel, 0, false);
 
-                    commandController.SaveChipsToDisk();
+                    commandController.SaveChipsToDisk("Register");
                 }
 
                 bot.SendMessageInChannel(messageString, channel);

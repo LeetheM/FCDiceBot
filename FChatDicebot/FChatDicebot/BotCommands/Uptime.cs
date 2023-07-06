@@ -14,7 +14,7 @@ namespace FChatDicebot.BotCommands
             Name = "uptime";
             RequireBotAdmin = false;
             RequireChannelAdmin = false;
-            RequireChannel = true;
+            RequireChannel = false;
             LockCategory = CommandLockCategory.NONE;
         }
 
@@ -22,7 +22,15 @@ namespace FChatDicebot.BotCommands
         {
             int channelsNumber = bot.ChannelsJoined.Count();
             TimeSpan onlineTime = DateTime.UtcNow - bot.LoginTime;
-            bot.SendMessageInChannel("Dicebot has been online for " + Utils.GetTimeSpanPrint(onlineTime), channel);
+
+            if (!commandController.MessageCameFromChannel(channel))
+            {
+                bot.SendPrivateMessage("Dicebot has been online for " + Utils.GetTimeSpanPrint(onlineTime), characterName);
+            }
+            else
+            {
+                bot.SendMessageInChannel("Dicebot has been online for " + Utils.GetTimeSpanPrint(onlineTime), channel);
+            }
         }
     }
 }

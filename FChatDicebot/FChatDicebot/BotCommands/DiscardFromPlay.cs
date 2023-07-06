@@ -21,7 +21,7 @@ namespace FChatDicebot.BotCommands
 
         public override void Run(BotMain bot, BotCommandController commandController, string[] rawTerms, string[] terms, string characterName, string channel, UserGeneratedCommand command)
         {
-            MoveCards.Run(bot, commandController, rawTerms, terms, characterName, channel, command, CardMoveType.ToDiscardFromPlay);
+            MoveCards.Run(bot, commandController, rawTerms, terms, characterName, channel, command, CardPileId.Play, CardPileId.Discard);
 
             //bool all = false;
             //bool redraw = false;

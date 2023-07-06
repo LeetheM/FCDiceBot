@@ -35,13 +35,9 @@ namespace FChatDicebot.BotCommands
                 }
                 else
                 {
-                    IGame gametype = commandController.GetGameTypeFromCommandTerms(bot.DiceBot, terms);
+                    IGame gametype = commandController.GetGameTypeForCommand(bot.DiceBot, channel, terms, out messageString);
 
-                    if(gametype == null)
-                    {
-                        messageString = "Error: Game type not found.";
-                    }
-                    else
+                    if(gametype != null)
                     {
                         GameSession sesh = bot.DiceBot.GetGameSession(channel, gametype, false);
 

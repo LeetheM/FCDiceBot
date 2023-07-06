@@ -48,7 +48,7 @@ namespace FChatDicebot.BotCommands
                 else
                 {
                     if (pot)
-                        messageString = bot.DiceBot.DisplayChipPile(channel, DiceBot.PotName);
+                        messageString = bot.DiceBot.DisplayChipPile(channel, DiceBot.PotPlayerAlias);
                     else
                         messageString = bot.DiceBot.DisplayChipPile(channel, characterName);
                 }

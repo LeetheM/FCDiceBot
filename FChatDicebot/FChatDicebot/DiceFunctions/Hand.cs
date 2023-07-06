@@ -12,26 +12,11 @@ namespace FChatDicebot.DiceFunctions
 
         public Hand()
         {
-            ResetHand();
-            CollectionName = BotMain.HandCollectionName;// "hand";
+            Reset();
+            CollectionName = BotMain.HandCollectionName;
         }
 
-        public void SetCollectionName(string newName)
-        {
-            CollectionName = newName;
-        }
-
-        public string GetCollectionName()
-        {
-            return CollectionName;
-        }
-
-        public void ResetHand()
-        {
-            Cards = new List<DeckCard>();
-        }
-
-        public void AddCard(DeckCard d)
+        public override void AddCard(DeckCard d, Random r)
         {
             Cards.Add(d);
         }
@@ -39,19 +24,6 @@ namespace FChatDicebot.DiceFunctions
         public int HandPokerValue()
         {
             return 0;
-        }
-
-        public DeckCard GetCardAtIndex(int i)
-        {
-            if (i < Cards.Count && i >= 0)
-                return Cards[i];
-            else
-                return null;
-        }
-
-        public int CardsCount()
-        {
-            return Cards.Count();
         }
     }
 }

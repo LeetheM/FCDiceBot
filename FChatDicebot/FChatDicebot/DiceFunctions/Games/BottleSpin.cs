@@ -28,9 +28,19 @@ namespace FChatDicebot.DiceFunctions
             return false;
         }
 
+        public bool UsesFlatAnte()
+        {
+            return false;
+        }
+
         public bool KeepSessionDefault()
         {
             return true;
+        }
+
+        public int GetMinimumMsBetweenGames()
+        {
+            return 0;
         }
 
         public string GetStartingDisplay()
@@ -43,11 +53,34 @@ namespace FChatDicebot.DiceFunctions
             return "";//Round finished. Thank you for playing Bottle Spin using [user]Dice Bot[/user]!";
         }
 
-        public string RunGame(System.Random r, List<String> playerNames, DiceBot diceBot, BotMain botMain, GameSession session)
+        public string GameStatus(GameSession session)
         {
-            int index = r.Next(playerNames.Count);
+            if (!string.IsNullOrEmpty(session.RandomPlayerQueueData.LastPlayerSpun))
+                return "The last player spun was " + Utils.GetCharacterUserTags(session.RandomPlayerQueueData.LastPlayerSpun) + ".";
+            else
+                return "No players have been spun yet.";
+        }
 
-            string selectedPlayer = playerNames[index];
+        public bool AddGameDataForPlayerJoin(string characterName, GameSession session, BotMain botMain, string[] terms, int ante, out string messageString)
+        {
+            session.RandomPlayerQueueData.AddNewPlayer(botMain.DiceBot.random, characterName);
+            messageString = "";
+            return true;
+        }
+
+        public string PlayerLeftGame(BotMain botMain, GameSession session, string characterName)
+        {
+            session.RandomPlayerQueueData.RemovePlayer(characterName);
+            return "";
+        }
+
+        public string RunGame(System.Random r, String executingPlayer, List<String> playerNames, DiceBot diceBot, BotMain botMain, GameSession session)
+        {
+            //int index = r.Next(playerNames.Count);
+
+            //string selectedPlayer = playerNames[index];
+
+            string selectedPlayer = session.RandomPlayerQueueData.GetNextPlayerSpin(r, executingPlayer);
 
             int spinTextNumber = r.Next(8);
             string spinText = "";
@@ -110,14 +143,23 @@ namespace FChatDicebot.DiceFunctions
             }
 
             string outputString = "[color=yellow]Spinning...[/color]\nThe bottle " + spinText + " and " + faceText + " " + Utils.GetCharacterUserTags(selectedPlayer) + "!";
+            //+ " " + Utils.PrintList(session.BottleSpinData.PlayerQueue) + " #" + session.BottleSpinData.currentQueueIndex;
 
             session.State = DiceFunctions.GameState.Finished;
             
             return outputString;
         }
 
-        public string IssueGameCommand(DiceBot diceBot, BotMain botMain, string character, string channel, GameSession session, string[] terms)
+        public string IssueGameCommand(DiceBot diceBot, BotMain botMain, string character, string channel, GameSession session, string[] terms, string[] rawTerms)
         {
+            //if(terms.Contains("debuginfo1"))
+            //{
+            //    return "queue exists: " + (session.BottleSpinData.PlayerQueue != null);
+            //}
+            //if (terms.Contains("debuginfo2"))
+            //{
+            //    return "queue size " + (session.BottleSpinData.PlayerQueue.Count) + " queue " + Utils.PrintList(session.BottleSpinData.PlayerQueue) + " index " + session.BottleSpinData.currentQueueIndex;
+            //}
             return GetGameName() + " has no valid GameCommands";
         }
     }

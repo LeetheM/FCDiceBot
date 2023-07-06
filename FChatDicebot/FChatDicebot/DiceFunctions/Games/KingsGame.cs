@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace FChatDicebot.DiceFunctions
 {
@@ -28,9 +29,19 @@ namespace FChatDicebot.DiceFunctions
             return false;
         }
 
+        public bool UsesFlatAnte()
+        {
+            return false;
+        }
+
         public bool KeepSessionDefault()
         {
             return true;
+        }
+
+        public int GetMinimumMsBetweenGames()
+        {
+            return 0;
         }
 
         public string GetStartingDisplay()
@@ -43,22 +54,74 @@ namespace FChatDicebot.DiceFunctions
             return "";
         }
 
-        public string RunGame(System.Random r, List<String> playerNames, DiceBot diceBot, BotMain botMain, GameSession session)
+        public string GameStatus(GameSession session)
+        {
+            if(session.KingsGamePlayers == null || session.KingsGamePlayers.Count < 2)
+            {
+                return "No players assigned yet.";
+            }
+            else
+            {
+                if (GetCurrentKing(session) != null)
+                {
+                    return "The current king is " + GetCurrentKing(session).Name + ". " + (session.KingsGamePlayers.Count - 1) + " other players have been given numbers.";
+                }
+                else
+                {
+                    return "The current king has not been assigned.";
+                }
+            }
+        }
+
+        public bool AddGameDataForPlayerJoin(string characterName, GameSession session, BotMain botMain, string[] terms, int ante, out string messageString)
+        {
+            session.RandomPlayerQueueData.AddNewPlayer(botMain.DiceBot.random, characterName);
+            messageString = "";
+            return true;
+        }
+
+        public string PlayerLeftGame(BotMain botMain, GameSession session, string characterName)
+        {
+            session.RandomPlayerQueueData.RemovePlayer(characterName);
+            string returnString = "";
+            if(session.KingsGamePlayers != null)
+            {
+                if(PlayerIsKing(session, characterName))
+                {
+                    returnString = "The king has left the game. The round will be reset.";
+                    ResetGameRound(session);
+                }
+                else
+                {
+                    var chara = session.KingsGamePlayers.FirstOrDefault(a => a.Name == characterName);
+                    if(chara != null)
+                        returnString = "A player has left the game. They had number " + chara.Role + ".";
+                }
+
+                session.KingsGamePlayers = session.KingsGamePlayers.Where(a => a.Name != characterName).ToList();
+            }
+
+            return returnString;
+        }
+
+        public string RunGame(System.Random r, String executingPlayer, List<String> playerNames, DiceBot diceBot, BotMain botMain, GameSession session)
         {
             botMain.SendMessageInChannel("[color=yellow]Selecting a new king and assigning numbers...[/color]", session.ChannelId);
 
-            int index = r.Next(playerNames.Count);
+            //int index = r.Next(playerNames.Count);
 
-            string selectedKing = playerNames[index];
+            //string selectedKing = playerNames[index];
 
-            while(session.KingsGamePlayers != null && session.KingsGamePlayers.Count > 1 && 
-                session.KingsGamePlayers.FirstOrDefault(a => a.Role == 0) != null &&
-                session.KingsGamePlayers.FirstOrDefault(a => a.Role == 0).Name == selectedKing)
-            {
-                index = r.Next(playerNames.Count);
+            string selectedKing = session.RandomPlayerQueueData.GetNextPlayerSpin(r, "");//player who spins can be the king still // executingPlayer);
 
-                selectedKing = playerNames[index];
-            }
+            //while (session.KingsGamePlayers != null && session.KingsGamePlayers.Count > 1 && 
+            //    session.KingsGamePlayers.FirstOrDefault(a => a.Role == 0) != null &&
+            //    session.KingsGamePlayers.FirstOrDefault(a => a.Role == 0).Name == selectedKing) //verify that this king was not selected last round
+            //{
+            //    index = r.Next(playerNames.Count);
+
+            //    selectedKing = playerNames[index];
+            //}
 
             int kingTextNumber = r.Next(7);
             string kingIntroText = "";
@@ -116,16 +179,16 @@ namespace FChatDicebot.DiceFunctions
             }
 
             int createdNumberIndex = 0;
-            int playerNumber = 0;
+            //int playerNumber = 0;
 
             session.KingsGamePlayers = new List<KingsGamePlayer>();
 
             foreach (string player in playerNames)
             {
-                if (playerNumber != index)
+                if (player != selectedKing)// playerNumber != index)
                 {
                     int playerAssignedNumber = assignedNumbers[createdNumberIndex];
-                    string messageToPlayer = "Your number is " + playerAssignedNumber + " for this round.";
+                    string messageToPlayer = "King's Game: Your number is " + playerAssignedNumber + " for this round.";
                     createdNumberIndex++;
                     session.KingsGamePlayers.Add(new KingsGamePlayer()
                     {
@@ -143,16 +206,16 @@ namespace FChatDicebot.DiceFunctions
                         Role = 0
                     });
                 }
-                playerNumber++;
+                //playerNumber++;
             }
 
-            botMain.SendPrivateMessage("You are the king this round!\nGive your command to the other players using the numbers 1 - " + assignedNumbers.Length + " and then award points based on if they completed the tasks.", selectedKing);
+            botMain.SendPrivateMessage("King's Game: You are the [b]king[/b] this round!\nGive your command to the other players using the numbers 1 - " + assignedNumbers.Length + " and then award points based on if they completed the tasks.", selectedKing);
 
             string outputString = "" + kingIntroText + Utils.GetCharacterUserTags(selectedKing) +
                 "\nEveryone has been assigned their numbers and the king may make decrees using the numbers 1 - " + assignedNumbers.Length + "." +
                 "\n..." +
                 "\nNext Step: After the tasks are finished, the king must assign points with !gc awardpoints [player number(s)], or the round can be cancelled with !gc endround" + 
-                "\nNote: If there is any confusion about who has what number you can use !gc showallnumbers[/sub]";
+                "\n[sub]Note: If there is any confusion about who has what number you can use !gc showallnumbers[/sub]";
             
             session.State = DiceFunctions.GameState.GameInProgress;
             
@@ -210,12 +273,22 @@ namespace FChatDicebot.DiceFunctions
             return false;
         }
 
+        public KingsGamePlayer GetCurrentKing(GameSession session)
+        {
+            if (session.KingsGamePlayers == null || session.KingsGamePlayers.Count < 1)
+                return null;
+
+            KingsGamePlayer thisKing = session.KingsGamePlayers.FirstOrDefault(a => a.Role == 0);
+
+            return thisKing;
+        }
+
         public void ResetGameRound(GameSession session)
         {
             session.State = GameState.Unstarted;
         }
 
-        public string IssueGameCommand(DiceBot diceBot, BotMain botMain, string character, string channel, GameSession session, string[] terms)
+        public string IssueGameCommand(DiceBot diceBot, BotMain botMain, string character, string channel, GameSession session, string[] terms, string[] rawTerms)
         {
             string returnString = "";
             if(terms.Contains("showallnumbers"))

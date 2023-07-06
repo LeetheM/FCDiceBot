@@ -15,7 +15,7 @@ namespace FChatDicebot.DiceFunctions
 
         public int GetMaxPlayers()
         {
-            return 12;
+            return 20;
         }
 
         public int GetMinPlayers()
@@ -28,9 +28,19 @@ namespace FChatDicebot.DiceFunctions
             return true;
         }
 
+        public bool UsesFlatAnte()
+        {
+            return false;
+        }
+
         public bool KeepSessionDefault()
         {
             return false;
+        }
+
+        public int GetMinimumMsBetweenGames()
+        {
+            return 5 * 60 * 1000;
         }
 
         public string GetStartingDisplay()
@@ -43,7 +53,283 @@ namespace FChatDicebot.DiceFunctions
             return "";
         }
 
-        public string RunGame(System.Random r, List<String> playerNames, DiceBot diceBot, BotMain botMain, GameSession session)
+        public string GameStatus(GameSession session)
+        {
+            string betString = "";
+            if (session.RouletteBets != null && session.RouletteBets.Count > 0)
+            {
+                foreach (RouletteBetData bet in session.RouletteBets)
+                {
+                    if (!string.IsNullOrEmpty(betString))
+                    {
+                        betString += ", ";
+                    }
+
+                    betString += bet.GetBetString();
+                }
+                betString = "Current Bets: " + betString;
+            }
+            return betString;
+        }
+
+        private RouletteBetData GetBetFromTerms(string characterName, string[] terms, int betAmount, out string messageString)
+        {
+            RouletteBet betType = RouletteBet.NONE;
+            int betNumber = -1;
+
+            if (terms.Contains("red"))
+                betType = RouletteBet.Red;
+            else if (terms.Contains("black"))
+                betType = RouletteBet.Black;
+            else if (terms.Contains("even"))
+                betType = RouletteBet.Even;
+            else if (terms.Contains("odd"))
+                betType = RouletteBet.Odd;
+            else if (terms.Contains("first12"))
+                betType = RouletteBet.First12;
+            else if (terms.Contains("second12"))
+                betType = RouletteBet.Second12;
+            else if (terms.Contains("third12"))
+                betType = RouletteBet.Third12;
+            else if (terms.Contains("firsthalf"))
+                betType = RouletteBet.OneToEighteen;
+            else if (terms.Contains("secondhalf"))
+                betType = RouletteBet.NineteenToThirtySix;
+            else if (terms.Contains("#1"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 1;
+            }
+            else if (terms.Contains("#2"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 2;
+            }
+            else if (terms.Contains("#3"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 3;
+            }
+            else if (terms.Contains("#4"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 4;
+            }
+            else if (terms.Contains("#5"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 5;
+            }
+            else if (terms.Contains("#6"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 6;
+            }
+            else if (terms.Contains("#7"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 7;
+            }
+            else if (terms.Contains("#8"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 8;
+            }
+            else if (terms.Contains("#9"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 9;
+            }
+            else if (terms.Contains("#10"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 10;
+            }
+            else if (terms.Contains("#11"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 11;
+            }
+            else if (terms.Contains("#12"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 12;
+            }
+            else if (terms.Contains("#13"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 13;
+            }
+            else if (terms.Contains("#14"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 14;
+            }
+            else if (terms.Contains("#15"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 15;
+            }
+            else if (terms.Contains("#16"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 16;
+            }
+            else if (terms.Contains("#17"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 17;
+            }
+            else if (terms.Contains("#18"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 18;
+            }
+            else if (terms.Contains("#19"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 19;
+            }
+            else if (terms.Contains("#20"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 20;
+            }
+            else if (terms.Contains("#21"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 21;
+            }
+            else if (terms.Contains("#22"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 22;
+            }
+            else if (terms.Contains("#23"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 23;
+            }
+            else if (terms.Contains("#24"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 24;
+            }
+            else if (terms.Contains("#25"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 25;
+            }
+            else if (terms.Contains("#26"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 26;
+            }
+            else if (terms.Contains("#27"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 27;
+            }
+            else if (terms.Contains("#28"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 28;
+            }
+            else if (terms.Contains("#29"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 29;
+            }
+            else if (terms.Contains("#30"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 30;
+            }
+            else if (terms.Contains("#31"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 31;
+            }
+            else if (terms.Contains("#32"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 32;
+            }
+            else if (terms.Contains("#33"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 33;
+            }
+            else if (terms.Contains("#34"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 34;
+            }
+            else if (terms.Contains("#35"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 35;
+            }
+            else if (terms.Contains("#36"))
+            {
+                betType = RouletteBet.SpecificNumber;
+                betNumber = 36;
+            }
+
+            if (betType == RouletteBet.NONE)
+            {
+                messageString = "No bet type was found in the [b]!joingame " + GetGameName() + "[/b] command. Try adding a bet amount and a bet type.";
+                return null;
+            }
+            else if (betAmount <= 0)
+            {
+                messageString = "No bet amount was found in the [b]!joingame " + GetGameName() + "[/b] command. Try adding a bet amount and a bet type.";
+                return null;
+            }
+            else
+            {
+                messageString = "";
+                return new RouletteBetData()
+                {
+                    bet = betType,
+                    specificNumberBet = betNumber,
+                    characterName = characterName,
+                    amount = betAmount
+                };
+            }
+        }
+
+        public bool AddGameDataForPlayerJoin(string characterName, GameSession session, BotMain botMain, string[] terms, int ante, out string messageString)
+        {
+            RouletteBetData rouletteBet = GetBetFromTerms(characterName, terms, ante, out messageString);
+
+            if (rouletteBet != null)
+            {
+                //create player or bet data object for this game?
+                bool addDataSuccess = session.AddGameData(rouletteBet);
+
+                if (addDataSuccess)
+                {
+                    messageString = "";
+                    return true;
+                }
+                else
+                {
+                    messageString = "Error: Failed to add bet data to game session for " + GetGameName() + ".";
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        public string PlayerLeftGame(BotMain botMain, GameSession session, string characterName)
+        {
+            session.RouletteBets = session.RouletteBets.Where(a => a.characterName != characterName).ToList();
+
+            return " their bet was removed.";
+        }
+
+        public string RunGame(System.Random r, String executingPlayer, List<String> playerNames, DiceBot diceBot, BotMain botMain, GameSession session)
         {
             int randomResult = r.Next(37);//0-36
 
@@ -67,7 +353,7 @@ namespace FChatDicebot.DiceFunctions
             if (colorGreen)
                 rollResult = "[color=green]" + randomResult + " (green)[/color]";
 
-            string rouletteRollString = "[color=yellow]The dealer tosses in the ball! The wheel is spinning...[/color]\n[color=yellow]...[/color]\nThe ball landed on " + rollResult + "!";
+            string rouletteRollString = "[color=yellow]The dealer tosses in the ball! The wheel is spinning...[/color]\n[color=yellow]...[/color]\n[color=yellow]The ball landed on [/color]" + rollResult + "!";
 
             string characterBetsString = "";
 
@@ -104,8 +390,8 @@ namespace FChatDicebot.DiceFunctions
                 characterBetsString += betstring;
             }
 
-            ChipPile houseChipsPile = diceBot.GetChipPile(DiceBot.HouseName, session.ChannelId, true);
-            string claimPotString = diceBot.ClaimPot(DiceBot.HouseName, session.ChannelId, false, false);
+            ChipPile houseChipsPile = diceBot.GetChipPile(DiceBot.HousePlayerAlias, session.ChannelId, true);
+            string claimPotString = diceBot.ClaimPot(DiceBot.HousePlayerAlias, session.ChannelId, 1);
 
             string betReturns = "";
 
@@ -126,10 +412,10 @@ namespace FChatDicebot.DiceFunctions
 
                     if (houseChipsPile.Chips < betWonAmount)
                     {
-                        diceBot.AddChips(DiceBot.HouseName, session.ChannelId, betWonAmount, false);
+                        diceBot.AddChips(DiceBot.HousePlayerAlias, session.ChannelId, betWonAmount, false);
                     }
 
-                    winningsString += diceBot.GiveChips(DiceBot.HouseName, bet.characterName, session.ChannelId, betWonAmount, false);
+                    winningsString += diceBot.GiveChips(DiceBot.HousePlayerAlias, bet.characterName, session.ChannelId, betWonAmount, false);
                 }
 
                 if (!string.IsNullOrEmpty(betReturns))
@@ -224,9 +510,37 @@ namespace FChatDicebot.DiceFunctions
             return 0;
         }
 
-        public string IssueGameCommand(DiceBot diceBot, BotMain botMain, string character, string channel, GameSession session, string[] terms)
+        public string IssueGameCommand(DiceBot diceBot, BotMain botMain, string character, string channel, GameSession session, string[] terms, string[] rawTerms)
         {
-            return GetGameName() + " has no valid GameCommands";
+            string messageString = "";
+            if(terms.Contains("addbet") || terms.Contains("bet"))
+            {
+                int betAmount = Utils.GetNumberFromInputs(terms);
+                RouletteBetData rouletteBet = GetBetFromTerms(character, terms, betAmount, out messageString);
+                if (rouletteBet == null)
+                {
+                    messageString = "Error: roulette bet not found. " + messageString;
+                }
+                else
+                {
+                    bool addDataSuccess = session.AddGameData(rouletteBet);
+
+                    if (addDataSuccess)
+                    {
+                        messageString = "Added bet for " + character;
+                    }
+                    else
+                    {
+                        messageString = "Error: Failed to add bet data to game session for " + GetGameName() + ".";
+                    }
+                }
+            }
+            if(terms.Contains("help"))
+            {
+                messageString = "Add more bets for roulette with !gc bet (bet amount) (bet type), where bet amount is a number of chips and bet type is red, black, firsthalf, secondhalf, first12, second12, third12, even, odd, #1";
+            }
+
+            return messageString;
         }
     }
 

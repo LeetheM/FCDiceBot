@@ -46,11 +46,50 @@ namespace FChatDicebot.DiceFunctions
                     colorString = "[color=gray]";
                     suitString = "♠";
                     break;
+                case 4://red for uno
+                    colorString = "[color=red]";
+                    suitString = "R";
+                    break;
+                case 5:
+                    colorString = "[color=blue]";
+                    suitString = "B";
+                    break;
+                case 6:
+                    colorString = "[color=yellow]";
+                    suitString = "Y";
+                    break;
+                case 7:
+                    colorString = "[color=green]";
+                    suitString = "G";
+                    break;
+                case 8://y for uno
+                    colorString = "[color=red]"; // ✝ sword: latin cross
+                    suitString = "✝";
+                    break;
+                case 9:
+                    colorString = "[color=blue]"; //Ų cup: latin capital U with Ogonek “🍵”
+                    suitString = "🍵";
+                    break;
+                case 10:
+                    colorString = "[color=yellow]"; //✪ pentacle  ⛤⍟  “✪”
+                    suitString = "✪";
+                    break;
+                case 11:
+                    colorString = "[color=green]"; // ƪ wand: latin letter reversed Esh loop
+                    suitString = "ƪ";
+                    break;
             }
             switch (number)
             {
+                case 0:
+                    if (!string.IsNullOrEmpty(suitString))
+                        numString = "0";
+                    break;
                 case 1:
-                    numString = "A";
+                    if (suit < 4 || suit >= 8)
+                        numString = "A";
+                    else if (suit >= 4 && suit < 8)
+                        numString = "1";
                     break;
                 case 2:
                 case 3:
@@ -64,13 +103,26 @@ namespace FChatDicebot.DiceFunctions
                     numString = number.ToString();
                     break;
                 case 11:
-                    numString = "J";
+                    if (suit < 4 || suit >= 8)
+                        numString = "J";
+                    else if (suit >= 4 && suit < 8)
+                        numString = "[Draw 2]";
                     break;
                 case 12:
-                    numString = "Q";
+                    if (suit < 4)
+                        numString = "Q";
+                    else if (suit >= 4 && suit < 8)
+                        numString = "[Skip]";
                     break;
                 case 13:
-                    numString = "K";
+                    if (suit < 4)
+                        numString = "K";
+                    else if (suit >= 4 && suit < 8)
+                        numString = "[Reverse]";
+                    break;
+                case 14:
+                    if (suit >=8)
+                        numString = "P";
                     break;
                 default:
                     numString = number.ToString();
@@ -92,6 +144,11 @@ namespace FChatDicebot.DiceFunctions
             if (string.IsNullOrEmpty(description))
                 descriptionString = "";
             return "[b]" + nameString + "[/b]" + descriptionString;
+        }
+
+        public bool Equals(DeckCard d)
+        {
+            return suit == d.suit && number == d.number && specialName == d.specialName && joker == d.joker;
         }
     }
 }

@@ -18,24 +18,32 @@ namespace FChatDicebot.DiceFunctions
         //TODO: add to the game sessions a way for them to store their own data or interpret a shared field here
         public List<RouletteBetData> RouletteBets = new List<RouletteBetData>();
         public List<KingsGamePlayer> KingsGamePlayers = new List<KingsGamePlayer>();
+        public PokerGameData PokerGameData = new PokerGameData();
+        public BlackjackGameData BlackjackGameData = new BlackjackGameData();
+        public LiarsDiceData LiarsDiceData = new LiarsDiceData();
+        public SlamRollData SlamRollData = new SlamRollData();
+        public RockPaperScissorsData RockPaperScissorsData = new RockPaperScissorsData();
+        public PokerData PokerData = new PokerData();
 
-        public string PokerTurnPlayer;
+        public PlayerRandomQueueData RandomPlayerQueueData = new PlayerRandomQueueData();
+
+        //public GameData GameData = new GameData();
 
         public int Ante;
         public bool AnteSet = false;
 
         public int MinimumBetIncrement;
 
-        public string RunGame(DiceBot diceBot, BotMain botMain)
+        public string RunGame(String executingCharacter, DiceBot diceBot, BotMain botMain)
         {
-            string returnString = CurrentGame.RunGame(diceBot.random, Players, diceBot, botMain, this);
+            string returnString = CurrentGame.RunGame(diceBot.random, executingCharacter, Players, diceBot, botMain, this);
 
             return returnString;
         }
 
-        public string IssueGameCommand(DiceBot diceBot, BotMain botMain, string character, string channel, string[] terms)
+        public string IssueGameCommand(DiceBot diceBot, BotMain botMain, string character, string channel, string[] terms, string[] rawTerms)
         {
-            string returnString = CurrentGame.IssueGameCommand(diceBot, botMain, character, channel, this, terms);
+            string returnString = CurrentGame.IssueGameCommand(diceBot, botMain, character, channel, this, terms, rawTerms);
 
             return returnString;
         }
@@ -51,27 +59,21 @@ namespace FChatDicebot.DiceFunctions
             {
                 readyToStartString += "[i] (" + secondOnTimer.ToString("N3") + " seconds until ready to start)[/i]";
             }
+            
+            string gameRelatedInfo = CurrentGame.GameStatus(this);
+            if (!string.IsNullOrEmpty(gameRelatedInfo))
+                gameRelatedInfo = "\n" + gameRelatedInfo;
 
-            string betString = "";
-            if(RouletteBets != null && RouletteBets.Count > 0)
-            {
-                foreach(RouletteBetData bet in RouletteBets)
-                {
-                    if (!string.IsNullOrEmpty(betString))
-                    {
-                        betString += ", ";
-                    }
+            return string.Format("[b]Game Name: {0}[/b] \nMin Players: {1}, Max Players: {2}, Keep Session: {3}, Ante: {4}\n" + 
+                "Game State: [b]{5}[/b]\nCurrent Players: {6}{7}" + 
+                "{8}", 
+                CurrentGame.GetGameName(), CurrentGame.GetMinPlayers(), CurrentGame.GetMaxPlayers(), CurrentGame.KeepSessionDefault(), Ante,
+                State.ToString(), Utils.PrintList(Players), readyToStartString, gameRelatedInfo);
+        }
 
-                    betString += bet.GetBetString();
-                }
-                betString = "\nCurrent Bets: " + betString;
-            }
-
-            return string.Format("[b]Game Name: {0}[/b] \nMin Players: {1} Max Players: {2} Ante: {3}\n" + 
-                "Game State: [b]{4}[/b]\nCurrent Players: {5}{6}" + 
-                "{7}", 
-                CurrentGame.GetGameName(), CurrentGame.GetMinPlayers(), CurrentGame.GetMaxPlayers(), Ante,
-                State.ToString(), Utils.PrintList(Players), readyToStartString, betString);
+        public bool HasEnoughPlayersToStart()
+        {
+            return Players != null && CurrentGame != null && Players.Count >= CurrentGame.GetMinPlayers();
         }
 
         public bool AddGameData(object gameDataObject)
@@ -82,7 +84,7 @@ namespace FChatDicebot.DiceFunctions
                 return true;
             }
             else
-                return false;
+                return true; 
         }
 
         public bool RemoveRouletteBet(string characterName)
@@ -108,6 +110,114 @@ namespace FChatDicebot.DiceFunctions
     {
         NONE,
         AwardPointsKingsGame
+    }
+
+
+    public class PlayerRandomQueueData
+    {
+        public List<String> PlayerQueue;
+        public int currentQueueIndex;
+        public string LastPlayerSpun;
+
+        public bool shuffled;
+
+        public PlayerRandomQueueData()
+        {
+            PlayerQueue = new List<string>();
+            shuffled = false;
+            currentQueueIndex = 0;
+        }
+
+        public string GetNextPlayerSpin(Random rnd, string playerName)
+        {
+            if (!shuffled)
+            {
+                ShuffleAllPlayers(rnd, false);
+                shuffled = true;
+            }
+
+            string thisPlayer = PlayerQueue[currentQueueIndex];
+
+            if (thisPlayer == playerName)
+            {
+                currentQueueIndex++;
+                if (currentQueueIndex >= PlayerQueue.Count)
+                {
+                    currentQueueIndex = 0;
+                }
+                thisPlayer = PlayerQueue[currentQueueIndex];
+            }
+
+            currentQueueIndex++;
+            if (currentQueueIndex >= PlayerQueue.Count)
+            {
+                ShuffleAllPlayers(rnd, true);
+            }
+            LastPlayerSpun = thisPlayer;
+            return thisPlayer;
+        }
+        
+        public void AddNewPlayer(Random rnd, string playerName)
+        {
+            int num = rnd.Next(0, PlayerQueue.Count);
+
+            if (num < currentQueueIndex)
+            {
+                currentQueueIndex++;
+            }
+
+            PlayerQueue.Insert(num, playerName);
+        }
+
+        public void RemovePlayer(string playername)
+        {
+            int index = PlayerQueue.IndexOf(playername);
+            if (index >= 0)
+            {
+                if (index < currentQueueIndex)
+                {
+                    currentQueueIndex -= 1;
+                }
+                PlayerQueue.RemoveAt(index);
+
+                if (currentQueueIndex >= PlayerQueue.Count)
+                {
+                    Random rnd = new Random();
+                    ShuffleAllPlayers(rnd, true);
+                }
+            }
+        }
+
+        public void ShuffleAllPlayers(Random rnd, bool moveLastTo2Plus)
+        {
+            currentQueueIndex = 0;
+            if (PlayerQueue.Count >= 0)
+            {
+                List<string> newPlayerNames = new List<string>();
+                int startingPlayerCount = PlayerQueue.Count;
+                string movedPlayer = null;
+                for (int i = 0; i < startingPlayerCount; i++)
+                {
+                    if (movedPlayer != null)
+                    {
+                        PlayerQueue.Add(movedPlayer);
+                        movedPlayer = null;
+                    }
+                    if (i == 0 && moveLastTo2Plus && PlayerQueue.Count > 1)
+                    {
+                        movedPlayer = PlayerQueue[PlayerQueue.Count - 1];
+                        PlayerQueue.RemoveAt(PlayerQueue.Count - 1);
+                    }
+
+                    int num = rnd.Next(0, PlayerQueue.Count);
+
+                    string nextInQueue = PlayerQueue[num];
+                    PlayerQueue.RemoveAt(num);
+                    newPlayerNames.Add(nextInQueue);
+                }
+                PlayerQueue = newPlayerNames;
+            }
+        }
     }
 }
 

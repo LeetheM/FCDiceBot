@@ -53,6 +53,7 @@ namespace FChatDicebot.DiceFunctions
     {
         public string TableId;
         public int RollBonus;
+        public string VariableRollBonus;
 
         public string ToString()
         {

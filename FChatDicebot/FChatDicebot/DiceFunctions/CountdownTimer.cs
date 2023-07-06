@@ -43,6 +43,11 @@ namespace FChatDicebot.DiceFunctions
             return ((double) GetMsRemaining()) / 1000;
         }
 
+        public double GetMinutesRemaining()
+        {
+            return ((double)GetMsRemaining()) / 60000;
+        }
+
         public bool TimerFinished()
         {
             return Timer.ElapsedMilliseconds >= FinishedMs;

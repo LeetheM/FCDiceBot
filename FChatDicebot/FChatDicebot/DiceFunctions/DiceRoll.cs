@@ -11,7 +11,7 @@ namespace FChatDicebot.DiceFunctions
         public int DiceRolled;
         public int DiceSides;
 
-        public int Total;
+        public long Total;
         public List<int> Rolls;
         public List<int> HighlightedIndexes;
         public List<int> CrossoutIndexes;
@@ -37,14 +37,14 @@ namespace FChatDicebot.DiceFunctions
         {
         }
 
-        public string ResultString()
+        public string ResultString(DiceRollFormat rollFormat = DiceRollFormat.Text, bool showTotal = true)
         {
             if(Error)
             {
                 return "ERROR: " + ErrorString;
             }
             if (DiceRolled > 0)
-                return "Rolled " + DiceRolled + "d" + DiceSides + " {" + PrintRollsList(Rolls) + "} " + GetConditionsString() + "= [b]" + Total + "[/b]";
+                return "Rolled " + DiceRolled + "d" + DiceSides + " {" + PrintRollsList(Rolls) + "} " + GetConditionsString() + (showTotal ?  "= [b]" + Total + "[/b]" : "");
             else
                 return "[b]" + Total + "[/b]";
         }
@@ -306,20 +306,42 @@ namespace FChatDicebot.DiceFunctions
             }
         }
 
-        public string PrintRollsList(List<int> rollsList)
+        public string PrintRollsList(List<int> rollsList, DiceRollFormat rollFormat = DiceRollFormat.OjEicon6)
         {
             if (rollsList == null || rollsList.Count == 0)
                 return "";
 
             string rtnString = "";
 
+            bool noFormats = (CrossoutIndexes == null || CrossoutIndexes.Count() == 0) &&
+                (HighlightedIndexes == null || HighlightedIndexes.Count() == 0) &&
+                (BoldedIndexes == null || BoldedIndexes.Count() == 0);
+            string shownDice = "";
+            if (!noFormats && rollFormat == DiceRollFormat.OjEicon6 && DiceSides == 6 && DiceRolled <= 20)
+            {
+                foreach (int i in rollsList)
+                {
+                    if (shownDice.Length > 0)
+                        shownDice += ", ";
+
+                    string addition = "[eicon]oj-dice" + i + "[/eicon]";
+
+                    shownDice += addition;
+                }
+                shownDice += " ";
+            }
             int count = 0;
+            bool showEicon = rollFormat == DiceRollFormat.OjEicon6 && DiceSides == 6 && noFormats && DiceRolled <= 20;
             foreach(int i in rollsList)
             {
-                if (rtnString.Length > 0)
+                string addition = i.ToString();
+                if (showEicon)
+                {
+                    addition = "[eicon]oj-dice" + i + "[/eicon]";
+                }
+                else if (rtnString.Length > 0)
                     rtnString += ", ";
 
-                string addition = i.ToString();
                 if(CrossoutIndexes != null && CrossoutIndexes.Contains(count))
                 {
                     addition = "[s]" + addition + "[/s]";
@@ -338,7 +360,7 @@ namespace FChatDicebot.DiceFunctions
                 count++;
             }
 
-            return rtnString;
+            return shownDice + rtnString;
         }
         
         public string GetConditionsString()
@@ -372,5 +394,12 @@ namespace FChatDicebot.DiceFunctions
 
             return explodeStr;
         }
+    }
+
+    public enum DiceRollFormat
+    {
+        Text,
+        OjEicon6,
+        AllEiconDb
     }
 }

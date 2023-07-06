@@ -14,12 +14,13 @@ namespace FChatDicebot.DiceFunctions
         public Deck(DeckType type)
         {
             DeckType = type;
-            CollectionName = "deck";
+            CollectionName = BotMain.DeckCollectionName;
         }
 
-        public void FillDeck(bool addJokers, FChatDicebot.SavedData.SavedDeck savedDeck = null)
+        public void FillDeck(bool addJokers, int copyNumber, FChatDicebot.SavedData.SavedDeck savedDeck = null)
         {
-            Cards = new List<DeckCard>();
+            if(copyNumber <= 1)
+                Cards = new List<DeckCard>();
 
             switch(DeckType)
             {
@@ -40,91 +41,63 @@ namespace FChatDicebot.DiceFunctions
                         }
                     }
                     break;
+                case DiceFunctions.DeckType.Uno:
+                    {
+                        for (int suit = 4; suit < 8; suit++)
+                        {
+                            for (int num = 1; num < 14; num++)
+                            {
+                                if(num == 10)
+                                {
+                                    Cards.Add(new DeckCard() { number = 0, suit = suit });
+                                }
+                                else
+                                {
+                                    Cards.Add(new DeckCard() { number = num, suit = suit });
+                                    Cards.Add(new DeckCard() { number = num, suit = suit });
+                                }
+                            }
+                        }
+
+                        for (int i = 0; i < 4; i++ )
+                        {
+                            Cards.Add(new DeckCard() { specialName = "[color=yellow]W[/color][color=blue]I[/color][color=red]L[/color][color=green]D[/color]" });
+                            Cards.Add(new DeckCard() { specialName = "[color=yellow]W[/color][color=blue]I[/color][color=red]L[/color][color=green]D[/color] [color=yellow]D[/color][color=blue]R[/color][color=red]A[/color][color=green]W[/color] [color=yellow]4[/color]" });
+                        }
+                    }
+                    break;
                 case DiceFunctions.DeckType.Tarot:
                     {
-                        Cards.Add(new DeckCard() { specialName = "The World" });
-                        Cards.Add(new DeckCard() { specialName = "Judgement" });
-                        Cards.Add(new DeckCard() { specialName = "The Sun" });
-                        Cards.Add(new DeckCard() { specialName = "The Moon" });
-                        Cards.Add(new DeckCard() { specialName = "The Star" });
-                        Cards.Add(new DeckCard() { specialName = "The Tower" });
-                        Cards.Add(new DeckCard() { specialName = "The Devil" });
-                        Cards.Add(new DeckCard() { specialName = "Temperance" });
-                        Cards.Add(new DeckCard() { specialName = "Death" });
-                        Cards.Add(new DeckCard() { specialName = "The Hanged Man" });
-                        Cards.Add(new DeckCard() { specialName = "Justice" });
-                        Cards.Add(new DeckCard() { specialName = "The Wheel of Fortune" });
-                        Cards.Add(new DeckCard() { specialName = "The Hermit" });
-                        Cards.Add(new DeckCard() { specialName = "Strength" });
-                        Cards.Add(new DeckCard() { specialName = "The Chariot" });
-                        Cards.Add(new DeckCard() { specialName = "The Lovers" });
-                        Cards.Add(new DeckCard() { specialName = "The Hierophant" });
-                        Cards.Add(new DeckCard() { specialName = "The Emperor" });
-                        Cards.Add(new DeckCard() { specialName = "The Empress" });
-                        Cards.Add(new DeckCard() { specialName = "The High Priestess" });
-                        Cards.Add(new DeckCard() { specialName = "The Magician" });
-                        Cards.Add(new DeckCard() { specialName = "The Fool" });
+                        Cards.Add(new DeckCard() { specialName = "[color=orange]The World[/color]" });
+                        Cards.Add(new DeckCard() { specialName = "[color=orange]Judgement[/color]" });
+                        Cards.Add(new DeckCard() { specialName = "[color=orange]The Sun[/color]" });
+                        Cards.Add(new DeckCard() { specialName = "[color=orange]The Moon[/color]" });
+                        Cards.Add(new DeckCard() { specialName = "[color=orange]The Star[/color]" });
+                        Cards.Add(new DeckCard() { specialName = "[color=orange]The Tower[/color]" });
+                        Cards.Add(new DeckCard() { specialName = "[color=orange]The Devil[/color]" });
+                        Cards.Add(new DeckCard() { specialName = "[color=orange]Temperance[/color]" });
+                        Cards.Add(new DeckCard() { specialName = "[color=orange]Death[/color]" });
+                        Cards.Add(new DeckCard() { specialName = "[color=orange]The Hanged Man[/color]" });
+                        Cards.Add(new DeckCard() { specialName = "[color=orange]Justice[/color]" });
+                        Cards.Add(new DeckCard() { specialName = "[color=orange]The Wheel of Fortune[/color]" });
+                        Cards.Add(new DeckCard() { specialName = "[color=orange]The Hermit[/color]" });
+                        Cards.Add(new DeckCard() { specialName = "[color=orange]Strength[/color]" });
+                        Cards.Add(new DeckCard() { specialName = "[color=orange]The Chariot[/color]" });
+                        Cards.Add(new DeckCard() { specialName = "[color=orange]The Lovers[/color]" });
+                        Cards.Add(new DeckCard() { specialName = "[color=orange]The Hierophant[/color]" });
+                        Cards.Add(new DeckCard() { specialName = "[color=orange]The Emperor[/color]" });
+                        Cards.Add(new DeckCard() { specialName = "[color=orange]The Empress[/color]" });
+                        Cards.Add(new DeckCard() { specialName = "[color=orange]The High Priestess[/color]" });
+                        Cards.Add(new DeckCard() { specialName = "[color=orange]The Magician[/color]" });
+                        Cards.Add(new DeckCard() { specialName = "[color=orange]The Fool[/color]" });
 
-
-                        Cards.Add(new DeckCard() { specialName = "Ace of Wands" });
-                        Cards.Add(new DeckCard() { specialName = "Two of Wands" });
-                        Cards.Add(new DeckCard() { specialName = "Three of Wands" });
-                        Cards.Add(new DeckCard() { specialName = "Four of Wands" });
-                        Cards.Add(new DeckCard() { specialName = "Five of Wands" });
-                        Cards.Add(new DeckCard() { specialName = "Six of Wands" });
-                        Cards.Add(new DeckCard() { specialName = "Seven of Wands" });
-                        Cards.Add(new DeckCard() { specialName = "Eight of Wands" });
-                        Cards.Add(new DeckCard() { specialName = "Nine of Wands" });
-                        Cards.Add(new DeckCard() { specialName = "Ten of Wands" });
-                        Cards.Add(new DeckCard() { specialName = "Page of Wands" });
-                        Cards.Add(new DeckCard() { specialName = "Queen of Wands" });
-                        Cards.Add(new DeckCard() { specialName = "King of Wands" });
-                        Cards.Add(new DeckCard() { specialName = "Knight of Wands" });
-
-                        Cards.Add(new DeckCard() { specialName = "Ace of Cups" });
-                        Cards.Add(new DeckCard() { specialName = "Two of Cups" });
-                        Cards.Add(new DeckCard() { specialName = "Three of Cups" });
-                        Cards.Add(new DeckCard() { specialName = "Four of Cups" });
-                        Cards.Add(new DeckCard() { specialName = "Five of Cups" });
-                        Cards.Add(new DeckCard() { specialName = "Six of Cups" });
-                        Cards.Add(new DeckCard() { specialName = "Seven of Cups" });
-                        Cards.Add(new DeckCard() { specialName = "Eight of Cups" });
-                        Cards.Add(new DeckCard() { specialName = "Nine of Cups" });
-                        Cards.Add(new DeckCard() { specialName = "Ten of Cups" });
-                        Cards.Add(new DeckCard() { specialName = "Page of Cups" });
-                        Cards.Add(new DeckCard() { specialName = "Queen of Cups" });
-                        Cards.Add(new DeckCard() { specialName = "King of Cups" });
-                        Cards.Add(new DeckCard() { specialName = "Knight of Cups" });
-
-                        Cards.Add(new DeckCard() { specialName = "Ace of Swords" });
-                        Cards.Add(new DeckCard() { specialName = "Two of Swords" });
-                        Cards.Add(new DeckCard() { specialName = "Three of Swords" });
-                        Cards.Add(new DeckCard() { specialName = "Four of Swords" });
-                        Cards.Add(new DeckCard() { specialName = "Five of Swords" });
-                        Cards.Add(new DeckCard() { specialName = "Six of Swords" });
-                        Cards.Add(new DeckCard() { specialName = "Seven of Swords" });
-                        Cards.Add(new DeckCard() { specialName = "Eight of Swords" });
-                        Cards.Add(new DeckCard() { specialName = "Nine of Swords" });
-                        Cards.Add(new DeckCard() { specialName = "Ten of Swords" });
-                        Cards.Add(new DeckCard() { specialName = "Page of Swords" });
-                        Cards.Add(new DeckCard() { specialName = "Queen of Swords" });
-                        Cards.Add(new DeckCard() { specialName = "King of Swords" });
-                        Cards.Add(new DeckCard() { specialName = "Knight of Swords" });
-
-                        Cards.Add(new DeckCard() { specialName = "Ace of Pentacles" });
-                        Cards.Add(new DeckCard() { specialName = "Two of Pentacles" });
-                        Cards.Add(new DeckCard() { specialName = "Three of Pentacles" });
-                        Cards.Add(new DeckCard() { specialName = "Four of Pentacles" });
-                        Cards.Add(new DeckCard() { specialName = "Five of Pentacles" });
-                        Cards.Add(new DeckCard() { specialName = "Six of Pentacles" });
-                        Cards.Add(new DeckCard() { specialName = "Seven of Pentacles" });
-                        Cards.Add(new DeckCard() { specialName = "Eight of Pentacles" });
-                        Cards.Add(new DeckCard() { specialName = "Nine of Pentacles" });
-                        Cards.Add(new DeckCard() { specialName = "Ten of Pentacles" });
-                        Cards.Add(new DeckCard() { specialName = "Page of Pentacles" });
-                        Cards.Add(new DeckCard() { specialName = "Queen of Pentacles" });
-                        Cards.Add(new DeckCard() { specialName = "King of Pentacles" });
-                        Cards.Add(new DeckCard() { specialName = "Knight of Pentacles" });
+                        for (int suit = 8; suit < 12; suit++)
+                        {
+                            for (int num = 1; num < 15; num++)
+                            {
+                                Cards.Add(new DeckCard() { number = num, suit = suit });
+                            }
+                        }
                     }
                     break;
                 case DeckType.ManyThings:
@@ -177,6 +150,33 @@ namespace FChatDicebot.DiceFunctions
             }
         }
 
+        public override void AddCard(DeckCard d, Random r)
+        {
+            //if(Cards.Contains(d.))
+            var exist = Cards.FirstOrDefault(abb => abb.Equals(d));
+            if (exist != null)
+            {
+                int yar = Cards.IndexOf(exist);
+                if(yar < DeckPosition)
+                {
+                    Cards.Remove(exist);
+                    DeckPosition -= 1;
+                }
+            }
+
+            Cards.Add(d);
+            //get random position among remaining spots
+            int remainingCards = Cards.Count - DeckPosition;
+
+            int randomSpot = r.Next(remainingCards) + DeckPosition;
+
+            for (int i = Cards.Count - 1; i > randomSpot && i >= 1; i--)
+            {
+                int swapPos = r.Next(remainingCards);
+                SwapPositions(i, i - 1);
+            }
+        }
+
         public void CreateFromDeckList(string deckList)
         {
             if(string.IsNullOrEmpty(deckList))
@@ -213,7 +213,8 @@ namespace FChatDicebot.DiceFunctions
                 if (!string.IsNullOrEmpty(deckList))
                     deckList += ",";
 
-                deckList += d.specialName;
+                deckList += d.ToString();
+
                 if (!string.IsNullOrEmpty(d.description))
                     deckList += "|" + d.description;
             }
@@ -291,9 +292,19 @@ namespace FChatDicebot.DiceFunctions
             return Cards.Count();
         }
 
+        public int GetNumberCardsDrawn()
+        {
+            return DeckPosition;
+        }
+
+        public string GetCardsRatio()
+        {
+            return GetCardsRemaining() + " / " + GetTotalCards();
+        }
+
         public bool ContainsJokers()
         {
-            return DeckType == DeckType.Playing && Cards.Count() > 52;
+            return DeckType == DeckType.Playing && Cards.Count() % 52 != 0;
         }
     }
 
@@ -302,6 +313,10 @@ namespace FChatDicebot.DiceFunctions
         Playing,
         Tarot,
         ManyThings,
+        Uno,
+        Skipbo, //hard to use with current play rules, need piles of some kind
+        Placeholder,
+        Placehodler2,
         Custom
     }
 }

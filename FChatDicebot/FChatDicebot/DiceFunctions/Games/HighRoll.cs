@@ -15,7 +15,7 @@ namespace FChatDicebot.DiceFunctions
 
         public int GetMaxPlayers()
         {
-            return 8;
+            return 20;
         }
 
         public int GetMinPlayers()
@@ -28,9 +28,19 @@ namespace FChatDicebot.DiceFunctions
             return true;
         }
 
+        public bool UsesFlatAnte()
+        {
+            return true;
+        }
+
         public bool KeepSessionDefault()
         {
             return false;
+        }
+
+        public int GetMinimumMsBetweenGames()
+        {
+            return 0;
         }
 
         public string GetStartingDisplay()
@@ -40,10 +50,26 @@ namespace FChatDicebot.DiceFunctions
 
         public string GetEndingDisplay()
         {
-            return "";//Round finished. Thank you for playing High Roll using [user]Dice Bot[/user]!";
+            return "";
         }
 
-        public string RunGame(System.Random r, List<String> playerNames, DiceBot diceBot, BotMain botMain, GameSession session)
+        public string GameStatus(GameSession session)
+        {
+            return "";
+        }
+
+        public bool AddGameDataForPlayerJoin(string characterName, GameSession session, BotMain botMain, string[] terms, int ante, out string messageString)
+        {
+            messageString = "";
+            return true;
+        }
+
+        public string PlayerLeftGame(BotMain botMain, GameSession session, string characterName)
+        {
+            return "";
+        }
+
+        public string RunGame(System.Random r, String executingPlayer, List<String> playerNames, DiceBot diceBot, BotMain botMain, GameSession session)
         {
             List<string> currentPlayerNames = new List<string>();
 
@@ -89,7 +115,7 @@ namespace FChatDicebot.DiceFunctions
 
                     if (highestRoll < finishedRolls[i].Total)
                     {
-                        highestRoll = finishedRolls[i].Total;
+                        highestRoll = (int) finishedRolls[i].Total;
                     }
                 }
 
@@ -131,7 +157,7 @@ namespace FChatDicebot.DiceFunctions
                     string betstring = "";
                     if(session.Ante > 0)
                     {
-                        betstring = "\n" + diceBot.ClaimPot(playerNameWinner, session.ChannelId, false, false);
+                        betstring = "\n" + diceBot.ClaimPot(playerNameWinner, session.ChannelId, 1);
                     }
 
                     outputString += "\n[b]" + Utils.GetCharacterUserTags(playerNameWinner) + " wins![/b]" + betstring;
@@ -143,7 +169,7 @@ namespace FChatDicebot.DiceFunctions
             return outputString;
         }
 
-        public string IssueGameCommand(DiceBot diceBot, BotMain botMain, string character, string channel, GameSession session, string[] terms)
+        public string IssueGameCommand(DiceBot diceBot, BotMain botMain, string character, string channel, GameSession session, string[] terms, string[] rawTerms)
         {
             return GetGameName() + " has no valid GameCommands";
         }

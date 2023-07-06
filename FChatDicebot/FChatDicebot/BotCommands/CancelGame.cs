@@ -56,7 +56,7 @@ namespace FChatDicebot.BotCommands
 
                     if (sesh != null)
                     {
-                        ChipPile potChips = bot.DiceBot.GetChipPile(DiceBot.PotName, channel);
+                        ChipPile potChips = bot.DiceBot.GetChipPile(DiceBot.PotPlayerAlias, channel);
 
                         if(!adminCancel && sesh.Ante > 0 && potChips.Chips > 0)
                         {

@@ -54,7 +54,7 @@ namespace FChatDicebot.BotCommands
                 {
                     messageString = bot.DiceBot.AddChips(characterName, channel, chipAmount, pot);
 
-                    commandController.SaveChipsToDisk();
+                    commandController.SaveChipsToDisk("AddChips");
                 }
 
                 bot.SendMessageInChannel(messageString, channel);

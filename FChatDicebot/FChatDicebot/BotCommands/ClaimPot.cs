@@ -26,18 +26,16 @@ namespace FChatDicebot.BotCommands
 
             if (thisChannel.AllowChips)
             {
-                bool half = false;
-                bool third = false;
-
+                double portion = 1;
                 if (terms != null && terms.Length >= 1 && terms.Contains("half"))
-                    half = true;
+                    portion = .5;
 
                 if (terms != null && terms.Length >= 1 && terms.Contains("third"))
-                    third = true;
+                    portion = .33;
 
-                string messageString = bot.DiceBot.ClaimPot(characterName, channel, half, third);
+                string messageString = bot.DiceBot.ClaimPot(characterName, channel, portion);
 
-                commandController.SaveChipsToDisk();
+                commandController.SaveChipsToDisk("ClaimPot");
 
                 bot.SendMessageInChannel(messageString, channel);
             }

@@ -14,7 +14,7 @@ namespace FChatDicebot.BotCommands
             Name = "botinfo";
             RequireBotAdmin = false;
             RequireChannelAdmin = false;
-            RequireChannel = true;
+            RequireChannel = false;
             LockCategory = CommandLockCategory.NONE;
         }
 
@@ -22,11 +22,21 @@ namespace FChatDicebot.BotCommands
         {
             int channelsNumber = bot.ChannelsJoined.Count();
             TimeSpan onlineTime = DateTime.UtcNow - bot.LoginTime;
-            bot.SendMessageInChannel("Dice Bot was developed by [user]Darkness Syndra[/user] on 10/12/2020"
-                + "\nversion " + BotMain.Version
-                + "\ncurrently operating in " + channelsNumber + " channels."
-                + "\nonline for " + Utils.GetTimeSpanPrint(onlineTime)
-                + "\nfor a list of commands, see the profile [user]Dice Bot[/user].", channel);
+
+            string resultMessageString = "Dice Bot was developed by [user]Ambitious Syndra[/user] on 10/12/2020"
+                + "\nCurrent version " + BotMain.Version
+                + "\nCurrently operating in " + channelsNumber + " channels."
+                + "\nOnline for " + Utils.GetTimeSpanPrint(onlineTime)
+                + "\nFor a list of commands, use !help. See the profile [user]Dice Bot[/user] for more detailed information.";
+                
+            if (!commandController.MessageCameFromChannel(channel))
+            {
+                bot.SendPrivateMessage(resultMessageString, characterName);
+            }
+            else
+            {
+                bot.SendMessageInChannel(resultMessageString, channel);
+            }
         }
     }
 }

@@ -42,7 +42,7 @@ namespace FChatDicebot.BotCommands
                 {
                     messageString = bot.DiceBot.BetChips(characterName, channel, betAmount, all);
 
-                    commandController.SaveChipsToDisk();
+                    commandController.SaveChipsToDisk("Bet");
                 }
 
                 bot.SendMessageInChannel(messageString, channel);

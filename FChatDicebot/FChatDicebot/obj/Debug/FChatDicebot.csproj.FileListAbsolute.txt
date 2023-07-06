@@ -1,5 +1,4 @@
 C:\MyProjects\FChatDicebot\FChatDicebot\bin\Debug\FChatDicebot.exe.config
-C:\MyProjects\FChatDicebot\FChatDicebot\obj\Debug\FChatDicebot.csprojResolveAssemblyReference.cache
 C:\MyProjects\FChatDicebot\FChatDicebot\bin\Debug\FChatDicebot.exe
 C:\MyProjects\FChatDicebot\FChatDicebot\bin\Debug\FChatDicebot.pdb
 C:\MyProjects\FChatDicebot\FChatDicebot\bin\Debug\Newtonsoft.Json.dll
@@ -16,3 +15,4 @@ C:\MyProjects\FChatDicebot\retired\FChatDicebot\bin\Debug\Newtonsoft.Json.dll
 C:\MyProjects\FChatDicebot\retired\FChatDicebot\bin\Debug\websocket-sharp.dll
 C:\MyProjects\FChatDicebot\retired\FChatDicebot\bin\Debug\Newtonsoft.Json.xml
 C:\MyProjects\FChatDicebot\retired\FChatDicebot\obj\Debug\FChatDicebot.csprojResolveAssemblyReference.cache
+C:\MyProjects\FChatDicebot\FChatDicebot\obj\Debug\FChatDicebot.csprojResolveAssemblyReference.cache

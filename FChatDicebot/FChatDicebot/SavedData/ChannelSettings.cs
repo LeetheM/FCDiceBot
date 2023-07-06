@@ -10,15 +10,24 @@ namespace FChatDicebot.SavedData
     {
         public string Name;
 
+        public char CommandPrefix;
         public bool UseEicons; //todo: create feature and apply 
         public bool GreetNewUsers;
         public bool AllowTableRolls;
         public bool AllowCustomTableRolls;
+        public bool AllowSlots;
         public bool AllowTableInfo;
         public bool AllowChips;
         public bool AllowGames;
+        public bool AllowChess;
+        public bool AllowChessEicons;
         public ChipsClearanceLevel ChipsClearance;
-        public bool StartWith500Chips;
+        public int SlotsMultiplierLimit;
+        public bool StartWith500Chips; //now defunct : not used anywhere (except update setting)
+        public int StartingChips;
+        public bool RemoveSlotsCooldown;
+        public bool RemoveLuckForecastCooldown;
+        public bool DefaultSlotsFruit;
         public bool UseVcAccountForChips;
         public bool StartupChannel;
 
@@ -35,5 +44,14 @@ namespace FChatDicebot.SavedData
         NONE,
         ChannelOp,
         DicebotAdmin
+    }
+
+    public enum SlotsMultiplierLimit
+    {
+        NoLimit,
+        TimesOneHundred,
+        TimesTwenty,
+        TimesTen,
+        NoMultiplierAllowed
     }
 }

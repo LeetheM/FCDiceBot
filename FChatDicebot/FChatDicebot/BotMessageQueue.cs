@@ -33,6 +33,13 @@ namespace FChatDicebot
 
         public BotMessage Peek()
         {
+            if (Messages.Peek() == null)
+            {
+                Console.WriteLine("Removed null message from queue");
+                Utils.AddToLog("Removed null message from queue", null);
+                Messages = (Queue<BotMessage>)Messages.Where(a => a != null);
+            }
+
             return Messages.Peek();
         }
 

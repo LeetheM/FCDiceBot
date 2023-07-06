@@ -15,8 +15,7 @@ namespace FChatDicebot
 {
     public class Utils
     {
-
-        public static WebRequest CreateWebRequest(string url, System.Object saveReq, string method = "POST")
+        public static WebRequest CreateWebRequest(string url, System.Object saveReq, string method = "POST", bool xWwwForm = false)
         {
             WebRequest request = WebRequest.Create(url);
 
@@ -26,31 +25,45 @@ namespace FChatDicebot
             if (method == "POST")
             {
                 Console.WriteLine("method POST");
-                request.ContentType = "application/json";
+                if(xWwwForm)
+                {
+                    request.ContentType = "application/x-www-form-urlencoded";
 
-                string jsonString = "";
-                try
-                {
-                    jsonString = JsonConvert.SerializeObject(saveReq);
+                    string strNew = saveReq.ToString();
+                    using (StreamWriter stOut = new StreamWriter(request.GetRequestStream(), System.Text.Encoding.ASCII))
+                    {
+                        stOut.Write(strNew);
+                        stOut.Close();
+                    }
                 }
-                catch (Exception exc)
+                else
                 {
-                    Console.WriteLine("error occured on jsonconvert: " + exc.ToString());
-                }
-                byte[] bytes = Encoding.ASCII.GetBytes(jsonString);
+                    request.ContentType = "application/json";
 
-                Stream os = null;
-                try
-                {
-                    request.ContentLength = bytes.Length;
-                    os = request.GetRequestStream();
-                    os.Write(bytes, 0, bytes.Length);
-                    os.Close();
-                    Console.WriteLine("wrote stream " + jsonString);
-                }
-                catch (WebException ex)
-                {
-                    Console.WriteLine("error occred on content write " + ex.ToString());
+                    string jsonString = "";
+                    try
+                    {
+                        jsonString = JsonConvert.SerializeObject(saveReq);
+                    }
+                    catch (Exception exc)
+                    {
+                        Console.WriteLine("error occured on jsonconvert: " + exc.ToString());
+                    }
+                    byte[] bytes = Encoding.ASCII.GetBytes(jsonString);
+
+                    Stream os = null;
+                    try
+                    {
+                        request.ContentLength = bytes.Length;
+                        os = request.GetRequestStream();
+                        os.Write(bytes, 0, bytes.Length);
+                        os.Close();
+                        Console.WriteLine("wrote stream " + jsonString);
+                    }
+                    catch (WebException ex)
+                    {
+                        Console.WriteLine("error occred on content write " + ex.ToString());
+                    }
                 }
             }
 
@@ -157,6 +170,27 @@ namespace FChatDicebot
             for (int i = 0; i < inputs.Length; i++)
             {
                 rtnArray[i] = inputs[i].ToLower();
+            }
+            return rtnArray;
+        }
+
+        public static string[] TrimStringsAndRemoveEmpty(string[] inputs)
+        {
+            if (inputs == null)
+                return null;
+
+            int emptyStrings = inputs.Count(a => a == "" || a == null);
+
+            string[] rtnArray = new String[inputs.Length - emptyStrings];
+
+            int addedStringsIndex = 0;
+            for (int i = 0; i < inputs.Length; i++)
+            {
+                if(!string.IsNullOrEmpty(inputs[i]))
+                {
+                    rtnArray[addedStringsIndex] = inputs[i].Trim();
+                    addedStringsIndex++;
+                }
             }
             return rtnArray;
         }
@@ -286,6 +320,8 @@ namespace FChatDicebot
                     return "Tarot";
                 case DeckType.ManyThings:
                     return "Many Things";
+                case DeckType.Uno:
+                    return "Uno";
                 case DeckType.Custom:
                     return customDeckName;
             }
@@ -311,6 +347,35 @@ namespace FChatDicebot
             }
 
             return "undefined";
+        }
+
+        public static string GetCardMoveTypeString(CardPileId fromPile, CardPileId toPile)
+        {
+            return "from " + GetPileName(fromPile) + " to " + GetPileName(toPile);
+        }
+
+        public static string GetPileName(CardPileId pileId)
+        {
+            switch(pileId)
+            {
+                case CardPileId.Hand:
+                    return "hand";
+                case CardPileId.Deck:
+                    return "deck";
+                case CardPileId.Burn:
+                    return "burned";
+                case CardPileId.Dealer:
+                    return "dealer";
+                case CardPileId.Play:
+                    return "play";
+                case CardPileId.Discard:
+                    return "discard";
+                case CardPileId.HiddenInPlay:
+                    return "hidden";
+                case CardPileId.NONE:
+                default:
+                    return "noPile";
+            }
         }
 
         public static string GetDeckTypeStringHidePlaying(DeckType deckType, string customDeckName)
@@ -346,6 +411,20 @@ namespace FChatDicebot
             return form;
         }
 
+        public static void CopyFile(string fileName, string sourcePath, string destinationPath)
+        {
+            try
+            {
+                string transferStart = GetTotalFileName(sourcePath, fileName);
+                string transferTarget = GetTotalFileName(destinationPath, fileName);
+                System.IO.File.Copy(transferStart, transferTarget, true);
+
+            }catch(Exception exc)
+            {
+                Console.WriteLine("Exception on copy file " + exc.ToString());
+            }
+        }
+
         public static void WriteToFileAsData(object saveData, string fileName)
         {
             string g = JsonConvert.SerializeObject(saveData);
@@ -366,7 +445,7 @@ namespace FChatDicebot
         {
             try
             {
-                AppendToFileAsData(DateTime.Now.ToString() + ": " + note + ": ", saveData, Utils.GetTotalFileName(BotMain.FileFolder, AddDateToFileName(BotMain.LogFileName)));
+                AppendToFileAsData(DateTime.Now.ToString() + ": " + note + ": ", saveData, Utils.GetTotalFileName(BotMain.LogsFolder, AddDateToFileName(BotMain.LogFileName)));
 
             }catch(Exception exc)
             {
@@ -376,7 +455,8 @@ namespace FChatDicebot
 
         public static string AddDateToFileName(string fileName)
         {
-            string dateCode = "_" + DateTime.Now.Date.ToString("MM_DD_YYYY");
+            DateTime dNow = DateTime.Now.Date;
+            string dateCode = "_" +  dNow.Month + "_" + dNow.Day + "_" + dNow.Year;
 
             string usedName = fileName;
             string usedSuffix = ".txt";
@@ -441,18 +521,23 @@ namespace FChatDicebot
             return "[user]" + characterName + "[/user]";
         }
 
+        public static string GetCharacterIconTags(string characterName)
+        {
+            return "[icon]" + characterName + "[/icon]";
+        }
+
         public static string GetCharacterStringFromSpecialName(string characterName)
         {
             string cardDrawingCharacterString = GetCharacterUserTags(characterName);
-            if (characterName == DiceBot.DealerName)
+            if (characterName == DiceBot.DealerPlayerAlias)
                 cardDrawingCharacterString = "The dealer";
-            else if (characterName == DiceBot.BurnCardsName)
+            else if (characterName == DiceBot.BurnCardsPlayerAlias)
                 cardDrawingCharacterString = "Burned";
-            else if (characterName == DiceBot.DiscardName)
+            else if (characterName == DiceBot.DiscardPlayerAlias)
                 cardDrawingCharacterString = "Discarded";
-            else if (characterName == DiceBot.PotName)
+            else if (characterName == DiceBot.PotPlayerAlias)
                 cardDrawingCharacterString = "The pot";
-            else if (characterName == DiceBot.HouseName)
+            else if (characterName == DiceBot.HousePlayerAlias)
                 cardDrawingCharacterString = "The house";
 
             return cardDrawingCharacterString;
@@ -463,6 +548,15 @@ namespace FChatDicebot
             SavedRollTable infoTable = tables.FirstOrDefault(a => a.TableId == id);
 
             return infoTable;
+        }
+
+        public static SavedSlotsSetting GetSlotsFromId(List<SavedSlotsSetting> slots, string id)
+        {
+            if (id == null || slots == null)
+                return null;
+            SavedSlotsSetting infoSlots = slots.FirstOrDefault(a => a.SlotsId.ToLower() == id.ToLower());
+
+            return infoSlots;
         }
 
         public static SavedDeck GetDeckFromId(List<SavedDeck> decks, string id)
@@ -515,7 +609,7 @@ namespace FChatDicebot
                     rtn = "Second 12";
                     break;
                 case RouletteBet.Third12:
-                    rtn = "Second 12";
+                    rtn = "Third 12";
                     break;
                 case RouletteBet.OneToEighteen:
                     rtn = "First Half";

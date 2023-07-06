@@ -8,6 +8,8 @@ namespace FChatDicebot.SavedData
 {
     public class AccountSettings
     {
+        public string VcAccountName;
+        public string VcAccountPassword;
         public string AccountName;
         public string AccountPassword;
         public string CharacterName;

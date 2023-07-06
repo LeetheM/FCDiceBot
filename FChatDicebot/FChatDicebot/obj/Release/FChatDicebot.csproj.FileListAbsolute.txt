@@ -1,0 +1,17 @@
+C:\MyProjects\FChatDicebot\retired\FChatDicebot\bin\Release\FChatDicebot.exe.config
+C:\MyProjects\FChatDicebot\retired\FChatDicebot\bin\Release\FChatDicebot.exe
+C:\MyProjects\FChatDicebot\retired\FChatDicebot\bin\Release\FChatDicebot.pdb
+C:\MyProjects\FChatDicebot\retired\FChatDicebot\bin\Release\Newtonsoft.Json.dll
+C:\MyProjects\FChatDicebot\retired\FChatDicebot\bin\Release\websocket-sharp.dll
+C:\MyProjects\FChatDicebot\retired\FChatDicebot\bin\Release\Newtonsoft.Json.xml
+C:\MyProjects\FChatDicebot\retired\FChatDicebot\obj\Release\FChatDicebot.exe
+C:\MyProjects\FChatDicebot\retired\FChatDicebot\obj\Release\FChatDicebot.pdb
+C:\MyProjects\FChatDicebot\FChatDicebot\bin\Release\FChatDicebot.exe.config
+C:\MyProjects\FChatDicebot\FChatDicebot\obj\Release\FChatDicebot.exe
+C:\MyProjects\FChatDicebot\FChatDicebot\obj\Release\FChatDicebot.pdb
+C:\MyProjects\FChatDicebot\FChatDicebot\bin\Release\FChatDicebot.exe
+C:\MyProjects\FChatDicebot\FChatDicebot\bin\Release\Newtonsoft.Json.dll
+C:\MyProjects\FChatDicebot\FChatDicebot\bin\Release\websocket-sharp.dll
+C:\MyProjects\FChatDicebot\FChatDicebot\bin\Release\Newtonsoft.Json.xml
+C:\MyProjects\FChatDicebot\FChatDicebot\bin\Release\FChatDicebot.pdb
+C:\MyProjects\FChatDicebot\FChatDicebot\obj\Release\FChatDicebot.csprojResolveAssemblyReference.cache

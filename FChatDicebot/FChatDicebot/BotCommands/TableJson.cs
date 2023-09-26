@@ -10,11 +10,11 @@ using FChatDicebot.DiceFunctions;
 
 namespace FChatDicebot.BotCommands
 {
-    public class TableInfo : ChatBotCommand
+    public class TableJson : ChatBotCommand
     {
-        public TableInfo()
+        public TableJson()
         {
-            Name = "tableinfo";
+            Name = "tablejson";
             RequireBotAdmin = false;
             RequireChannelAdmin = true;
             RequireChannel = false;
@@ -42,42 +42,10 @@ namespace FChatDicebot.BotCommands
 
                     if (infoTable.Table != null)
                     {
-                        string tabledesc = infoTable.Table.Description + "\n";
-                        sendMessage += "\n\n Name: [b]" + infoTable.Table.Name + "[/b]\n " + tabledesc + " Roll Die: d" + infoTable.Table.DieSides + " Roll Bonus: " + infoTable.Table.RollBonus + " Only Show Result Description?: " + infoTable.Table.OnlyShowResultDescription;
-                        
-                        //if variables
-                        List<List<DiceFunctions.TableRollTrigger>> triggersStart = infoTable.Table.TableEntries.Select(a => a.Triggers).ToList();
-                        List<string> variablesFound = new List<string>();
-                        if(triggersStart != null)
-                        {
-                            foreach (List<DiceFunctions.TableRollTrigger> triggeru in triggersStart)
-                            {
-                                if (triggeru == null)
-                                    continue;
+                        string tabledesc = "\n" + infoTable.Table.Name + " JSON:\n";
+                        tabledesc += JsonConvert.SerializeObject(infoTable.Table);
 
-                                foreach (DiceFunctions.TableRollTrigger trigg in triggeru)
-                                {
-                                    if(!string.IsNullOrEmpty(trigg.Command))
-                                    {
-                                        if (trigg.Command.Contains("#x"))
-                                            variablesFound.Add("x");
-                                        if (trigg.Command.Contains("#y"))
-                                            variablesFound.Add("y");
-                                        if (trigg.Command.Contains("#z"))
-                                            variablesFound.Add("z");
-                                    }
-                                }
-                            }
-                        }//end if triggersstart != null
-                        
-                        if (variablesFound != null && variablesFound.Count() > 0)
-                        {
-                            var distinctVars = variablesFound.Distinct();
-                            sendMessage += "\n[b]Variables Expected: [/b]" + string.Join(", ", distinctVars); 
-                        }
-
-                        sendMessage += "\n" + infoTable.Table.GetTableEntryList();
-
+                        sendMessage += tabledesc;
                     }
                     else
                     {

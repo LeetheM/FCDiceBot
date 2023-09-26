@@ -8,20 +8,20 @@ using FChatDicebot.DiceFunctions;
 
 namespace FChatDicebot.BotCommands
 {
-    public class TakeFromPlay : ChatBotCommand
+    public class UsePower2 : ChatBotCommand
     {
-        public TakeFromPlay()
+        public UsePower2()
         {
-            Name = "takefromplay";
+            Name = "usepower2";
             RequireBotAdmin = false;
             RequireChannelAdmin = false;
-            RequireChannel = true;
-            LockCategory = CommandLockCategory.ChannelDecks;
+            RequireChannel = false;
+            LockCategory = CommandLockCategory.ChannelScores;
         }
 
         public override void Run(BotMain bot, BotCommandController commandController, string[] rawTerms, string[] terms, string characterName, string channel, UserGeneratedCommand command)
         {
-            MoveCards.Run(bot, commandController, rawTerms, terms, characterName, channel, command, CardPileId.Play, CardPileId.Hand);
+            SendCommandToGame.Run(bot, commandController, rawTerms, terms, characterName, channel, command, Name, "Mafia");
         }
     }
 }

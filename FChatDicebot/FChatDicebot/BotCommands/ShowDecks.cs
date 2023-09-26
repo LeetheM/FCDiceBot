@@ -10,11 +10,11 @@ using FChatDicebot.DiceFunctions;
 
 namespace FChatDicebot.BotCommands
 {
-    public class ShowTables : ChatBotCommand
+    public class ShowDecks : ChatBotCommand
     {
-        public ShowTables()
+        public ShowDecks()
         {
-            Name = "showtables";
+            Name = "showdecks";
             RequireBotAdmin = false;
             RequireChannelAdmin = true;
             RequireChannel = false;
@@ -29,54 +29,58 @@ namespace FChatDicebot.BotCommands
 
             bool fromChannel = commandController.MessageCameFromChannel(channel);
 
-            if (!fromChannel || ( thisChannel != null && thisChannel.AllowTableInfo ))
+            if (!fromChannel || ( thisChannel != null && thisChannel.AllowGames ))
             {
                 string sendMessage = "_";
-                List<SavedRollTable> relevantTables = bot.SavedTables;
+                List<SavedDeck> relevantDecks = bot.SavedDecks;
                 if(!terms.Contains("all"))
                 {
-                    relevantTables = relevantTables.Where(a => a.OriginCharacter == characterName).ToList();
+                    relevantDecks = relevantDecks.Where(a => a.OriginCharacter == characterName).ToList();
                 }
 
-                if(relevantTables.Count == 0)
+                if (relevantDecks.Count == 0)
                 {
 
-                    sendMessage = "No tables found.";
+                    sendMessage = "No decks found.";
                     if(!terms.Contains("all"))
                     {
-                        sendMessage = "No tables found created by " + Utils.GetCharacterUserTags(characterName) + ".";
+                        sendMessage = "No decks found created by " + Utils.GetCharacterUserTags(characterName) + ".";
                     }
                 }
                 else
                 {
-                    sendMessage = "Tables found:";
+                    sendMessage = "Decks found:";
 
-                    relevantTables = relevantTables.OrderBy(a => a.OriginCharacter).ToList();
+                    List<string> defaultDecks = new List<string>() { "playing", "tarot", "manythings", "uno", "rumble", "rumbleextra" };
+                    string defaultDeckString = string.Join(", ", defaultDecks);
+                    sendMessage += "\nDefault Decks: " + defaultDeckString + "";
+                        
+                    relevantDecks = relevantDecks.OrderBy(a => a.OriginCharacter).ToList();
 
-                    string tablesMessage = "";
+                    string decksMessage = "";
                     string currentCharacter = "";
-                    foreach(SavedRollTable table in relevantTables)
+                    foreach (SavedDeck savedDeck in relevantDecks)
                     {
-                        if(currentCharacter != table.OriginCharacter)
+                        if(currentCharacter != savedDeck.OriginCharacter)
                         {
-                            currentCharacter = table.OriginCharacter;
+                            currentCharacter = savedDeck.OriginCharacter;
 
-                            if(!string.IsNullOrEmpty(tablesMessage))
+                            if(!string.IsNullOrEmpty(decksMessage))
                             {
-                                sendMessage += tablesMessage;
-                                tablesMessage = "";
+                                sendMessage += decksMessage;
+                                decksMessage = "";
                             }
-                            sendMessage += "\n" + Utils.GetCharacterUserTags(table.OriginCharacter) + ": ";
+                            sendMessage += "\n" + Utils.GetCharacterUserTags(savedDeck.OriginCharacter) + ": ";
                         }
-                        if(!string.IsNullOrEmpty(tablesMessage))
+                        if(!string.IsNullOrEmpty(decksMessage))
                         {
-                            tablesMessage += ", ";
+                            decksMessage += ", ";
                         }
 
-                        tablesMessage += table.TableId;
+                        decksMessage += savedDeck.DeckId;
                     }
 
-                    sendMessage += tablesMessage;
+                    sendMessage += decksMessage;
                 }
 
 

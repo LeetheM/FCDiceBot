@@ -10,11 +10,11 @@ using FChatDicebot.DiceFunctions;
 
 namespace FChatDicebot.BotCommands
 {
-    public class ShowTables : ChatBotCommand
+    public class ShowPotions : ChatBotCommand
     {
-        public ShowTables()
+        public ShowPotions()
         {
-            Name = "showtables";
+            Name = "showpotions";
             RequireBotAdmin = false;
             RequireChannelAdmin = true;
             RequireChannel = false;
@@ -32,30 +32,31 @@ namespace FChatDicebot.BotCommands
             if (!fromChannel || ( thisChannel != null && thisChannel.AllowTableInfo ))
             {
                 string sendMessage = "_";
-                List<SavedRollTable> relevantTables = bot.SavedTables;
+                List<SavedPotion> relevantPotions = bot.SavedPotions;
                 if(!terms.Contains("all"))
                 {
-                    relevantTables = relevantTables.Where(a => a.OriginCharacter == characterName).ToList();
+                    relevantPotions = relevantPotions.Where(a => a.OriginCharacter == characterName).ToList();
                 }
 
-                if(relevantTables.Count == 0)
+                if (relevantPotions.Count == 0)
                 {
 
-                    sendMessage = "No tables found.";
+                    sendMessage = "No potions found.";
                     if(!terms.Contains("all"))
                     {
-                        sendMessage = "No tables found created by " + Utils.GetCharacterUserTags(characterName) + ".";
+                        sendMessage = "No potions found created by " + Utils.GetCharacterUserTags(characterName) + ".";
                     }
                 }
                 else
                 {
-                    sendMessage = "Tables found:";
+                    sendMessage = "Potions found:";
 
-                    relevantTables = relevantTables.OrderBy(a => a.OriginCharacter).ToList();
+                    relevantPotions = relevantPotions.OrderBy(a => a.OriginCharacter).ToList();
 
                     string tablesMessage = "";
                     string currentCharacter = "";
-                    foreach(SavedRollTable table in relevantTables)
+                    string currentChannel = "";
+                    foreach (SavedPotion table in relevantPotions)
                     {
                         if(currentCharacter != table.OriginCharacter)
                         {
@@ -68,12 +69,23 @@ namespace FChatDicebot.BotCommands
                             }
                             sendMessage += "\n" + Utils.GetCharacterUserTags(table.OriginCharacter) + ": ";
                         }
+                        if (currentChannel != table.Channel)
+                        {
+                            currentChannel = table.Channel;
+
+                            if (!string.IsNullOrEmpty(tablesMessage))
+                            {
+                                sendMessage += tablesMessage;
+                                tablesMessage = "";
+                            }
+                            sendMessage += "(channel: " + (table.Channel) + ") ";
+                        }
                         if(!string.IsNullOrEmpty(tablesMessage))
                         {
                             tablesMessage += ", ";
                         }
 
-                        tablesMessage += table.TableId;
+                        tablesMessage += table.Enchantment == null? ("null") : table.Enchantment.prefix;
                     }
 
                     sendMessage += tablesMessage;

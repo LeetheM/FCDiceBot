@@ -21,15 +21,15 @@ namespace FChatDicebot.BotCommands
         public override void Run(BotMain bot, BotCommandController commandController, string[] rawTerms, string[] terms, string characterName, string channel, UserGeneratedCommand command)
         {
             int channelsNumber = bot.ChannelsJoined.Count();
-            TimeSpan onlineTime = DateTime.UtcNow - bot.LoginTime;
+            double onlineTime = Utils.GetCurrentTimestampSeconds() - bot.LoginTime;
 
             if (!commandController.MessageCameFromChannel(channel))
             {
-                bot.SendPrivateMessage("Dicebot has been online for " + Utils.GetTimeSpanPrint(onlineTime), characterName);
+                bot.SendPrivateMessage("Dicebot has been online for " + Utils.PrintTimeFromSeconds(onlineTime), characterName);
             }
             else
             {
-                bot.SendMessageInChannel("Dicebot has been online for " + Utils.GetTimeSpanPrint(onlineTime), channel);
+                bot.SendMessageInChannel("Dicebot has been online for " + Utils.PrintTimeFromSeconds(onlineTime), channel);
             }
         }
     }

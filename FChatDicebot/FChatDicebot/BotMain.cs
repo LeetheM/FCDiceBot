@@ -19,7 +19,7 @@ namespace FChatDicebot
         public const string FListChatUri = "wss://chat.f-list.net/chat2";
         public const bool _debug = false;
         public const bool _returnAllRecievedChatMessagesFromChannels = false;
-        public const bool _testVersion = true;
+        public const bool _testVersion = false;
         public const string Version = "1.44e";
 
         public const string FileFolder = "C:\\BotData\\DiceBot";

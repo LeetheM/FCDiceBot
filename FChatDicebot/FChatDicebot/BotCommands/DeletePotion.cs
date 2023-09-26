@@ -9,11 +9,11 @@ using Newtonsoft.Json;
 
 namespace FChatDicebot.BotCommands
 {
-    public class DeleteTable : ChatBotCommand
+    public class DeletePotion : ChatBotCommand
     {
-        public DeleteTable()
+        public DeletePotion()
         {
-            Name = "deletetable";
+            Name = "deletepotion";
             RequireBotAdmin = false;
             RequireChannelAdmin = true;
             RequireChannel = false;
@@ -22,25 +22,26 @@ namespace FChatDicebot.BotCommands
 
         public override void Run(BotMain bot, BotCommandController commandController, string[] rawTerms, string[] terms, string characterName, string channel, UserGeneratedCommand command)
         {
-            string tableName = commandController.GetTableNameFromCommandTerms(terms);
+            string potionName = Utils.GetFullStringOfInputs(rawTerms).Trim();
 
             bool characterIsAdmin = Utils.IsCharacterAdmin(bot.AccountSettings.AdminCharacters, characterName);
-            SavedRollTable deleteTable = Utils.GetTableFromId(bot.SavedTables, tableName);
+            var totalPotions = bot.SavedPotions.Where(a => a.OriginCharacter == characterName);
+            SavedPotion deletePotion = totalPotions.FirstOrDefault(a => a.Enchantment.prefix.ToLower() == potionName.ToLower() || a.Enchantment.suffix.ToLower() == potionName.ToLower());
 
-            string sendMessage = "No tables found for " + Utils.GetCharacterUserTags(characterName) + " with id " + tableName;
-            if (deleteTable != null)
+            string sendMessage = "No potions found for " + Utils.GetCharacterUserTags(characterName) + " with prefix " + potionName;
+            if (deletePotion != null)
             {
-                if (characterName == deleteTable.OriginCharacter || characterIsAdmin)
+                if (characterName == deletePotion.OriginCharacter || characterIsAdmin)
                 {
-                    bot.SavedTables.Remove(deleteTable);
+                    bot.SavedPotions.Remove(deletePotion);
 
-                    sendMessage = "[b]" + deleteTable.TableId + "[/b] deleted by " + Utils.GetCharacterUserTags(characterName);
+                    sendMessage = "[b]" + deletePotion.Enchantment.prefix + "[/b] deleted by " + Utils.GetCharacterUserTags(characterName);
 
-                    Utils.WriteToFileAsData(bot.SavedTables, Utils.GetTotalFileName(BotMain.FileFolder, BotMain.SavedTablesFileName));
+                    commandController.SavePotionDataToDisk();
                 }
                 else
                 {
-                    sendMessage = "Only " + deleteTable.OriginCharacter + " can delete their own saved table.";
+                    sendMessage = "Only " + deletePotion.OriginCharacter + " can delete their own saved potion.";
                 }
             }
 

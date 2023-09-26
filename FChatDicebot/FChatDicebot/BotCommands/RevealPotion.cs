@@ -10,11 +10,11 @@ using FChatDicebot.DiceFunctions;
 
 namespace FChatDicebot.BotCommands
 {
-    public class GeneratePotionInfo : ChatBotCommand
+    public class RevealPotion : ChatBotCommand
     {
-        public GeneratePotionInfo()
+        public RevealPotion()
         {
-            Name = "generatepotioninfo";
+            Name = "revealpotion";
             RequireBotAdmin = false;
             RequireChannelAdmin = false;
             RequireChannel = true;
@@ -23,11 +23,23 @@ namespace FChatDicebot.BotCommands
 
         public override void Run(BotMain bot, BotCommandController commandController, string[] rawTerms, string[] terms, string characterName, string channel, UserGeneratedCommand command)
         {
-            List<Enchantment> enchantments = bot.DiceBot.PotionGenerator.GetAllEnchantments(bot, true, channel);
-            string wholeList = string.Join(", ", enchantments.Select(a => (a.suffix) ) );
 
-            bot.SendPrivateMessage("[i]List of every generateable potion by suffix name: [/i]" + wholeList, characterName);
-            bot.SendMessageInChannel("Sent list of generateable potions to " + Utils.GetCharacterUserTags(characterName), channel);
+            Potion p = bot.DiceBot.GetPotionHeld(characterName, channel);
+
+            if(p == null)
+            {
+                bot.SendMessageInChannel(Utils.GetCharacterUserTags(characterName) + " is not holding a potion.", channel);
+            }
+            else
+            {
+
+                string output = bot.DiceBot.PotionGenerator.GetPotionGenerationOutputString(p, false);
+
+                output = "Showing potion held by " + Utils.GetCharacterIconTags(characterName) + "\n" + output;
+
+                bot.SendMessageInChannel(output, channel);
+            }
+
         }
     }
 }

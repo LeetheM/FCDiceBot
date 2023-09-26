@@ -21,12 +21,12 @@ namespace FChatDicebot.BotCommands
         public override void Run(BotMain bot, BotCommandController commandController, string[] rawTerms, string[] terms, string characterName, string channel, UserGeneratedCommand command)
         {
             int channelsNumber = bot.ChannelsJoined.Count();
-            TimeSpan onlineTime = DateTime.UtcNow - bot.LoginTime;
+            double onlineTime = Utils.GetCurrentTimestampSeconds() - bot.LoginTime;
 
             string resultMessageString = "Dice Bot was developed by [user]Ambitious Syndra[/user] on 10/12/2020"
                 + "\nCurrent version " + BotMain.Version
                 + "\nCurrently operating in " + channelsNumber + " channels."
-                + "\nOnline for " + Utils.GetTimeSpanPrint(onlineTime)
+                + "\nOnline for " + Utils.PrintTimeFromSeconds(onlineTime)
                 + "\nFor a list of commands, use !help. See the profile [user]Dice Bot[/user] for more detailed information.";
                 
             if (!commandController.MessageCameFromChannel(channel))
